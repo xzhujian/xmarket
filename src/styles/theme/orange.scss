@@ -1,0 +1,14 @@
+/* 橙色主题 */
+:root.accent-orange {
+  --accent-color: #f59e0b;
+  --accent-hover: #d97706;
+  --accent-rgb: 245, 158, 11;
+  --bg-active-msg: #f59e0b;
+}
+
+html[data-theme='dark'].accent-orange {
+  --accent-color: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-rgb: 245, 158, 11;
+  --bg-active-msg: rgba(245, 158, 11, 0.6);
+}

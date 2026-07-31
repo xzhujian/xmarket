@@ -1,0 +1,14 @@
+/* 玫瑰红主题 */
+:root.accent-rose {
+  --accent-color: #e11d48;
+  --accent-hover: #be123c;
+  --accent-rgb: 225, 29, 72;
+  --bg-active-msg: #e11d48;
+}
+
+html[data-theme='dark'].accent-rose {
+  --accent-color: #e11d48;
+  --accent-hover: #fb7185;
+  --accent-rgb: 225, 29, 72;
+  --bg-active-msg: rgba(225, 29, 72, 0.6);
+}

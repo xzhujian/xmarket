@@ -1,0 +1,14 @@
+/* 紫色主题 */
+:root.accent-purple {
+  --accent-color: #8b5cf6;
+  --accent-hover: #7c3aed;
+  --accent-rgb: 139, 92, 246;
+  --bg-active-msg: #8b5cf6;
+}
+
+html[data-theme='dark'].accent-purple {
+  --accent-color: #8b5cf6;
+  --accent-hover: #a78bfa;
+  --accent-rgb: 139, 92, 246;
+  --bg-active-msg: rgba(139, 92, 246, 0.6);
+}

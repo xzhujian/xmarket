@@ -1,0 +1,72 @@
+{
+  "nav": {
+    "home": "首页",
+    "theme": "换肤",
+    "market": "应用市场",
+    "my_apps": "我的应用",
+    "messages": "消息",
+    "settings": "设置",
+    "about": "关于"
+  },
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "search": "搜索",
+    "download": "下载",
+    "installed": "已安装",
+    "enable": "启用",
+    "disable": "禁用",
+    "delete": "删除",
+    "loading": "加载中...",
+    "reset": "恢复默认",
+    "saved": "已保存"
+  },
+  "layout": {
+    "layout1": "精简侧栏",
+    "layout2": "标准侧栏",
+    "layout3": "标签页模式",
+    "system": "系统功能",
+    "plugins": "我的插件",
+    "no_plugins": "暂无启用的插件"
+  },
+  "market": {
+    "all_apps": "全部应用",
+    "my_apps": "我的应用",
+    "no_plugins": "暂无插件，欢迎探索应用市场",
+    "no_my_plugins": "你还没有安装任何插件"
+  },
+  "message": {
+    "title": "消息中心",
+    "empty": "暂无消息",
+    "from": "来自 {appName}"
+  },
+  "theme": {
+    "title": "换肤",
+    "background": "背景设置",
+    "light": "浅色",
+    "dark": "深色",
+    "accent": "主题色"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "layout": "布局方式",
+    "about": "关于"
+  },
+  "about": {
+    "title": "关于",
+    "version": "版本",
+    "description": "一个基于 Tauri 2 的动态插件化桌面客户端框架",
+    "author": "作者"
+  },
+  "tray": {
+    "show": "显示主窗口",
+    "quit": "退出",
+    "about": "关于"
+  },
+  "welcome": {
+    "title": "欢迎使用",
+    "description": "请前往应用市场安装插件开始使用"
+  }
+}

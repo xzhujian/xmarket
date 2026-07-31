@@ -1,0 +1,72 @@
+{
+  "nav": {
+    "home": "Home",
+    "theme": "Theme",
+    "market": "App Market",
+    "my_apps": "My Apps",
+    "messages": "Messages",
+    "settings": "Settings",
+    "about": "About"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "search": "Search",
+    "download": "Download",
+    "installed": "Installed",
+    "enable": "Enable",
+    "disable": "Disable",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "reset": "Defaults",
+    "saved": "Saved"
+  },
+  "layout": {
+    "layout1": "Compact Sidebar",
+    "layout2": "Standard Sidebar",
+    "layout3": "Tabbed Mode",
+    "system": "System",
+    "plugins": "My Plugins",
+    "no_plugins": "No enabled plugins"
+  },
+  "market": {
+    "all_apps": "All Apps",
+    "my_apps": "My Apps",
+    "no_plugins": "No plugins yet. Explore the App Market!",
+    "no_my_plugins": "You haven't installed any plugins yet"
+  },
+  "message": {
+    "title": "Messages",
+    "empty": "No messages",
+    "from": "From {appName}"
+  },
+  "theme": {
+    "title": "Theme",
+    "background": "Background",
+    "light": "Light Mode",
+    "dark": "Dark Mode",
+    "accent": "Accent Color"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "layout": "Layout",
+    "about": "About"
+  },
+  "about": {
+    "title": "About",
+    "version": "Version",
+    "description": "A Tauri 2 based dynamic plugin desktop client framework",
+    "author": "Author"
+  },
+  "tray": {
+    "show": "Show Window",
+    "quit": "Quit",
+    "about": "About"
+  },
+  "welcome": {
+    "title": "Welcome",
+    "description": "Go to App Market to install plugins and get started"
+  }
+}
