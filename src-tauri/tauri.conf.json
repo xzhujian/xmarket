@@ -17,7 +17,7 @@
       "icons/icon.ico",
       "icons/icon.png"
     ],
-    "resources": ["../plugins"],
+    "resources": ["../plugins", "../plugins-data"],
     "targets": "nsis"
   },
   "app": {

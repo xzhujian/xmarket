@@ -33,6 +33,7 @@
   "market": {
     "all_apps": "全部应用",
     "my_apps": "我的应用",
+    "pack": "打包",
     "no_plugins": "暂无插件，欢迎探索应用市场",
     "no_my_plugins": "你还没有安装任何插件"
   },

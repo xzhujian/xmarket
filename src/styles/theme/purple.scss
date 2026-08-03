@@ -4,6 +4,7 @@
   --accent-hover: #7c3aed;
   --accent-rgb: 139, 92, 246;
   --bg-active-msg: #8b5cf6;
+  --text-active-color: #fff;
 }
 
 html[data-theme='dark'].accent-purple {
@@ -11,4 +12,5 @@ html[data-theme='dark'].accent-purple {
   --accent-hover: #a78bfa;
   --accent-rgb: 139, 92, 246;
   --bg-active-msg: rgba(139, 92, 246, 0.6);
+  --text-active-color: #fff;
 }

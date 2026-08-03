@@ -1,9 +1,9 @@
 <template>
-  <div class="text-center py-12" :style="{ color: 'var(--disabled-color)' }">
+  <div class="empty-state">
     <slot name="icon">
-      <SvgIcon :name="icon" :size="48" :style="{ color: 'var(--disabled-color)', opacity: 0.4 }" />
+      <SvgIcon :name="icon" :size="48" class="empty-icon" />
     </slot>
-    <p class="mt-3">{{ text }}</p>
+    <p class="empty-text">{{ text }}</p>
   </div>
 </template>
 
@@ -15,3 +15,20 @@ defineProps<{
   text: string
 }>()
 </script>
+
+<style scoped>
+.empty-state {
+  text-align: center;
+  padding: 48px 0;
+  color: var(--disabled-color);
+}
+
+.empty-icon {
+  color: var(--disabled-color);
+  opacity: 0.4;
+}
+
+.empty-text {
+  margin-top: 12px;
+}
+</style>

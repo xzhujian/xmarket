@@ -4,6 +4,7 @@
   --accent-hover: #be123c;
   --accent-rgb: 225, 29, 72;
   --bg-active-msg: #e11d48;
+  --text-active-color: #fff;
 }
 
 html[data-theme='dark'].accent-rose {
@@ -11,4 +12,5 @@ html[data-theme='dark'].accent-rose {
   --accent-hover: #fb7185;
   --accent-rgb: 225, 29, 72;
   --bg-active-msg: rgba(225, 29, 72, 0.6);
+  --text-active-color: #fff;
 }

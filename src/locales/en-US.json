@@ -33,6 +33,7 @@
   "market": {
     "all_apps": "All Apps",
     "my_apps": "My Apps",
+    "pack": "Pack",
     "no_plugins": "No plugins yet. Explore the App Market!",
     "no_my_plugins": "You haven't installed any plugins yet"
   },

@@ -1,10 +1,58 @@
 <template>
   <div class="my-apps-page">
-    <h2 class="text-lg font-semibold mb-4" :style="{ color: 'var(--text-color)' }">{{ $t('market.my_apps') }}</h2>
+    <!-- 标题栏 + 操作按钮 -->
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold" :style="{ color: 'var(--text-color)' }">{{ $t('market.my_apps') }}</h2>
+      <div class="flex items-center gap-2">
+        <TButton variant="outline" @click="loadPlugins">
+          <span class="flex items-center gap-1.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            <span>刷新</span>
+          </span>
+        </TButton>
+        <TButton variant="accent" @click="selectZipFile">
+          <span class="flex items-center gap-1.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span>安装插件</span>
+          </span>
+        </TButton>
+      </div>
+    </div>
 
-    <EmptyState icon="package" :text="$t('market.no_my_plugins')" />
+    <!-- 测试区：子 WebView 测试 -->
+    <div class="mb-4 p-3 rounded-lg" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
+      <div class="flex items-center gap-2 mb-2">
+        <TButton variant="accent" @click="testWebview">测试子 WebView（红色页面）</TButton>
+        <TButton variant="outline" @click="closeTestWebview">关闭</TButton>
+      </div>
+      <div class="text-xs" :style="{ color: 'var(--disabled-color)' }">
+        测试状态: {{ testStatus }}
+      </div>
+    </div>
 
-    <div v-else class="space-y-3">
+    <!-- 安装状态提示 -->
+    <div v-if="installMessage" class="mb-3 px-4 py-2 rounded-lg text-sm" :class="installMessageType === 'success' ? 'msg-success' : 'msg-error'">
+      {{ installMessage }}
+    </div>
+
+    <!-- 空状态 -->
+    <EmptyState v-if="!pluginStore.plugins.length && !loading" icon="package" :text="$t('market.no_my_plugins')" />
+
+    <!-- 加载中 -->
+    <div v-if="loading" class="flex items-center justify-center py-12">
+      <span class="text-sm" :style="{ color: 'var(--disabled-color)' }">正在扫描插件...</span>
+    </div>
+
+    <!-- 插件列表 -->
+    <div v-if="pluginStore.plugins.length" class="space-y-3">
       <div
         v-for="plugin in sortedPlugins"
         :key="plugin.id"
@@ -21,34 +69,191 @@
           </IconBox>
           <div>
             <h3 class="font-medium" :style="{ color: 'var(--text-color)' }">{{ plugin.name }}</h3>
-            <p class="text-xs mt-0.5" :style="{ color: 'var(--disabled-color)' }">{{ plugin.version }}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="text-xs" :style="{ color: 'var(--disabled-color)' }">v{{ plugin.version }}</span>
+              <span v-if="plugin.author" class="text-xs" :style="{ color: 'var(--disabled-color)' }">by {{ plugin.author }}</span>
+              <span v-if="plugin.hasBackend" class="text-xs px-1.5 py-0.5 rounded" style="background: #8b5cf622; color: #8b5cf6">含原生后端</span>
+            </div>
           </div>
         </div>
-        <button
-          class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200"
-          :style="{
-            background: plugin.enabled ? 'var(--button-bg-color)' : 'var(--accent-color)',
-            color: plugin.enabled ? 'var(--text-color)' : '#fff',
-          }"
-          @click="pluginStore.toggleEnabled(plugin.id)"
-        >
-          {{ plugin.enabled ? $t('common.disable') : $t('common.enable') }}
-        </button>
+        <div class="flex items-center gap-2">
+          <TButton variant="text" icon="download" :title="$t('market.pack')" @click="packPlugin(plugin)">
+            打包
+          </TButton>
+          <TButton
+            :variant="plugin.enabled ? 'outline' : 'accent'"
+            @click="pluginStore.toggleEnabled(plugin.id)"
+          >
+            {{ plugin.enabled ? $t('common.disable') : $t('common.enable') }}
+          </TButton>
+          <TButton variant="text" style="color: #ef4444" @click="confirmUninstall(plugin)">
+            卸载
+          </TButton>
+        </div>
+      </div>
+    </div>
+
+    <!-- 卸载确认弹窗 -->
+    <div v-if="uninstallTarget" class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(0,0,0,0.4)">
+      <div class="rounded-xl p-6 w-80" :style="{ background: 'var(--bg-card)', border: '1px solid var(--line-color)' }">
+        <h3 class="font-semibold mb-2" :style="{ color: 'var(--text-color)' }">确认卸载</h3>
+        <p class="text-sm mb-4" :style="{ color: 'var(--disabled-color)' }">
+          确定要卸载 <strong :style="{ color: 'var(--text-color)' }">{{ uninstallTarget.name }}</strong> 吗？<br>
+          此操作将删除插件文件，不可恢复。
+        </p>
+        <div class="flex justify-end gap-2">
+          <TButton variant="outline" @click="uninstallTarget = null">取消</TButton>
+          <TButton variant="accent" style="background: #ef4444" @click="doUninstall">确认卸载</TButton>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { usePluginStore } from '@/stores/plugins'
+import type { PluginItem } from '@/stores/plugins'
+import { open, save } from '@tauri-apps/plugin-dialog'
 import SvgIcon from '@/components/SvgIcon.vue'
 import IconBox from '@/components/IconBox.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import TButton from '@/components/form/TButton.vue'
 
 const pluginStore = usePluginStore()
+const installMessage = ref('')
+const installMessageType = ref<'success' | 'error'>('success')
+const loading = ref(false)
+const uninstallTarget = ref<PluginItem | null>(null)
+
+onMounted(() => {
+  loadPlugins()
+})
 
 const sortedPlugins = computed(() =>
   [...pluginStore.plugins].sort((a, b) => a.sortOrder - b.sortOrder)
 )
+
+async function loadPlugins() {
+  loading.value = true
+  try {
+    await pluginStore.loadPlugins()
+  } finally {
+    loading.value = false
+  }
+}
+
+// 子 WebView 测试
+const testStatus = ref('未测试')
+
+const TEST_URL = 'data:text/html,' + encodeURIComponent(`
+<html><body style="margin:0;background:linear-gradient(135deg,#ff6b6b,#ee5a24);display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
+<div style="background:white;padding:40px 60px;border-radius:16px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+<h1 style="color:#333;margin:0 0 8px;">✅ 子 WebView 测试</h1>
+<p style="color:#666;margin:0;">如果你能看到这个页面，说明子 WebView 正常工作！</p>
+</div>
+</body></html>
+`)
+
+async function testWebview() {
+  testStatus.value = '正在创建弹出窗口...'
+  try {
+    const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
+    const popup = new WebviewWindow('test-popup', {
+      url: TEST_URL,
+      title: '测试窗口',
+      width: 500,
+      height: 400,
+      center: true,
+    })
+    popup.once('tauri://created', () => {
+      testStatus.value = '弹出窗口已创建 ✓'
+    })
+    popup.once('tauri://error', (e: any) => {
+      testStatus.value = `创建失败: ${JSON.stringify(e)}`
+    })
+  } catch (err: any) {
+    testStatus.value = `创建失败: ${err?.message || err}`
+  }
+}
+
+async function closeTestWebview() {
+  try {
+    const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
+    const popup = await WebviewWindow.getByLabel('test-popup')
+    if (popup) await popup.close()
+    testStatus.value = '已关闭'
+  } catch { /* 忽略 */ }
+}
+
+async function selectZipFile() {
+  try {
+    const selected = await open({
+      multiple: false,
+      filters: [{ name: '插件包', extensions: ['zip'] }],
+    })
+    if (!selected) return
+
+    installMessage.value = '正在安装...'
+    installMessageType.value = 'success'
+
+    await pluginStore.installPlugin(selected as string)
+
+    installMessage.value = '插件安装成功 ✓'
+    installMessageType.value = 'success'
+    setTimeout(() => { installMessage.value = '' }, 3000)
+  } catch (err: any) {
+    installMessage.value = `安装失败: ${err?.message || err}`
+    installMessageType.value = 'error'
+  }
+}
+
+async function packPlugin(plugin: PluginItem) {
+  try {
+    const savePath = await save({
+      defaultPath: `${plugin.id}-${plugin.version}.zip`,
+      filters: [{ name: '插件包', extensions: ['zip'] }],
+    })
+    if (!savePath) return
+
+    const result = await pluginStore.packPlugin(plugin.id, savePath)
+    console.log('打包成功:', result)
+  } catch (err) {
+    console.error('打包失败:', err)
+  }
+}
+
+function confirmUninstall(plugin: PluginItem) {
+  uninstallTarget.value = plugin
+}
+
+async function doUninstall() {
+  if (!uninstallTarget.value) return
+  const plugin = uninstallTarget.value
+  uninstallTarget.value = null
+
+  try {
+    await pluginStore.uninstallPlugin(plugin.id)
+    installMessage.value = `插件「${plugin.name}」已卸载`
+    installMessageType.value = 'success'
+    setTimeout(() => { installMessage.value = '' }, 3000)
+  } catch (err: any) {
+    installMessage.value = `卸载失败: ${err?.message || err}`
+    installMessageType.value = 'error'
+  }
+}
 </script>
+
+<style scoped>
+.msg-success {
+  background: #22c55e22;
+  color: #22c55e;
+  border: 1px solid #22c55e44;
+}
+
+.msg-error {
+  background: #ef444422;
+  color: #ef4444;
+  border: 1px solid #ef444444;
+}
+</style>

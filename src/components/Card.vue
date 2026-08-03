@@ -1,7 +1,7 @@
 <template>
-  <div class="p-4 rounded-xl" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
-    <div v-if="title" class="flex items-center justify-between mb-3">
-      <h3 class="text-sm font-medium" :style="{ color: 'var(--text-color)' }">{{ title }}</h3>
+  <div class="card">
+    <div v-if="title" class="card-header">
+      <h3 class="card-title">{{ title }}</h3>
       <slot name="header" />
     </div>
     <slot />
@@ -13,3 +13,25 @@ defineProps<{
   title?: string
 }>()
 </script>
+
+<style scoped>
+.card {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--bg-setting-item);
+  border: 1px solid var(--line-color);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+</style>

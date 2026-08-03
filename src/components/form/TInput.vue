@@ -1,22 +1,18 @@
 <template>
-  <div class="input-wrapper">
-    <label v-if="label" class="input-label" :style="{ color: 'var(--text-color)' }">{{ label }}</label>
-    <div class="input-container" :class="{ 'has-error': error }">
+  <div class="tinput-wrap">
+    <label v-if="label" class="tinput-label">{{ label }}</label>
+    <div class="tinput-field-wrap" :class="{ error: !!error }">
       <input
         :type="type"
         :value="modelValue"
         :placeholder="placeholder"
         :disabled="disabled"
-        class="input-field"
-        :style="{
-          color: disabled ? 'var(--disabled-color)' : 'var(--text-color)',
-          background: 'var(--search-bg-color)',
-          borderColor: error ? '#ef4444' : 'var(--line-color)',
-        }"
+        class="tinput-field"
+        :class="{ disabled }"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       />
     </div>
-    <p v-if="error" class="input-error">{{ error }}</p>
+    <p v-if="error" class="tinput-error">{{ error }}</p>
   </div>
 </template>
 
@@ -36,38 +32,54 @@ defineEmits<{
 </script>
 
 <style scoped>
-.input-wrapper {
+.tinput-wrap {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.input-label {
+.tinput-label {
   font-size: 13px;
   font-weight: 500;
+  color: var(--text-color);
 }
 
-.input-field {
+.tinput-field-wrap {
+  display: flex;
+}
+
+.tinput-field {
   width: 100%;
   padding: 10px 12px;
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
   outline: none;
-  border: 1px solid;
+  border: 1px solid var(--line-color);
+  box-sizing: border-box;
+  color: var(--text-color);
+  background: var(--search-bg-color);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.input-field:focus {
+.tinput-field:focus {
   border-color: var(--accent-color) !important;
   box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
 }
 
-.input-field::placeholder {
+.tinput-field::placeholder {
   color: var(--disabled-color);
 }
 
-.input-error {
+.tinput-field.disabled {
+  color: var(--disabled-color);
+}
+
+.tinput-field-wrap.error .tinput-field {
+  border-color: #ef4444;
+}
+
+.tinput-error {
   font-size: 12px;
   color: #ef4444;
   margin: 0;

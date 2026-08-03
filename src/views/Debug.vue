@@ -37,6 +37,106 @@
         </div>
       </Card>
 
+      <Card title="组件预览">
+        <div class="space-y-5">
+          <!-- TInput -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TInput</div>
+            <div class="flex flex-col gap-2">
+              <TInput v-model="demoText" label="文本输入" placeholder="请输入内容" />
+              <TInput v-model="demoPwd" type="password" label="密码输入" placeholder="请输入密码" />
+              <TInput v-model="demoText" label="禁用状态" disabled />
+              <TInput v-model="demoText" label="错误状态" error="密码长度不能少于6位" />
+            </div>
+          </div>
+
+          <!-- TSelect -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TSelect</div>
+            <TSelect v-model="demoSelect" label="下拉选择" :options="selectOptions" />
+          </div>
+
+          <!-- TCheckbox -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TCheckbox</div>
+            <div class="flex flex-col gap-2">
+              <TCheckbox v-model="demoCheck1" label="已勾选" />
+              <TCheckbox v-model="demoCheck2" label="未勾选" />
+            </div>
+          </div>
+
+          <!-- TSwitch -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TSwitch</div>
+            <div class="flex flex-col gap-2">
+              <TSwitch v-model="demoSwitch1" label="已开启" />
+              <TSwitch v-model="demoSwitch2" label="已关闭" />
+            </div>
+          </div>
+
+          <!-- TButton -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TButton</div>
+            <div class="flex flex-wrap gap-2">
+              <TButton variant="accent">Accent</TButton>
+              <TButton variant="outline">Outline</TButton>
+              <TButton variant="text">Text</TButton>
+              <TButton variant="accent" loading>Loading</TButton>
+              <TButton variant="accent" disabled>Disabled</TButton>
+            </div>
+          </div>
+
+          <!-- TTextarea -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TTextarea</div>
+            <TTextarea v-model="demoText" label="备注" placeholder="请输入备注内容" />
+          </div>
+
+          <!-- TInputNumber -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TInputNumber</div>
+            <TInputNumber v-model="demoNumber" label="数量" :min="0" :max="100" />
+          </div>
+
+          <!-- TRadioGroup -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TRadioGroup</div>
+            <div class="space-y-3">
+              <TRadioGroup v-model="demoRadio" label="块模式 (block)" :options="radioOptions" />
+              <TRadioGroup v-model="demoRadio" label="圆点模式 (dot)" :options="radioOptions" mode="dot" />
+            </div>
+          </div>
+
+          <!-- TDatePicker -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TDatePicker</div>
+            <div class="space-y-3">
+              <TDatePicker v-model="demoDate" label="日期 (date)" placeholder="选择日期" />
+              <TDatePicker v-model="demoMonth" label="月份 (month)" placeholder="选择月份" type="month" />
+              <TDatePicker v-model="demoYear" label="年份 (year)" placeholder="选择年份" type="year" />
+              <TDatePicker v-model="demoTime" label="时间 (time)" placeholder="选择时间" type="time" />
+              <TDatePicker v-model="demoDateTime" label="日期时间 (datetime)" placeholder="选择日期时间" type="datetime" />
+            </div>
+          </div>
+
+          <!-- TDateRangePicker -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TDateRangePicker</div>
+            <div class="space-y-3">
+              <TDateRangePicker v-model="demoDateRange" label="日期范围 (date)" placeholder="选择日期范围" />
+              <TDateRangePicker v-model="demoMonthRange" label="月份范围 (month)" placeholder="选择月份范围" type="month" />
+              <TDateRangePicker v-model="demoYearRange" label="年份范围 (year)" placeholder="选择年份范围" type="year" />
+            </div>
+          </div>
+
+          <!-- TFileUpload -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TFileUpload</div>
+            <TFileUpload v-model="demoFile" label="上传文件" hint="点击或拖拽 .zip 文件到此处" accept=".zip,.txt" />
+          </div>
+        </div>
+      </Card>
+
       <Card title="控制台">
         <template #header>
           <button
@@ -71,7 +171,7 @@
             </span>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   </div>
 </template>
@@ -84,6 +184,17 @@ import { useDebugStore } from '@/stores/debug'
 import type { LogLevel } from '@/stores/debug'
 import SvgIcon from '@/components/SvgIcon.vue'
 import Card from '@/components/Card.vue'
+import TInput from '@/components/form/TInput.vue'
+import TSelect from '@/components/form/TSelect.vue'
+import TCheckbox from '@/components/form/TCheckbox.vue'
+import TSwitch from '@/components/form/TSwitch.vue'
+import TButton from '@/components/form/TButton.vue'
+import TTextarea from '@/components/form/TTextarea.vue'
+import TInputNumber from '@/components/form/TInputNumber.vue'
+import TRadioGroup from '@/components/form/TRadioGroup.vue'
+import TDatePicker from '@/components/form/TDatePicker.vue'
+import TDateRangePicker from '@/components/form/TDateRangePicker.vue'
+import TFileUpload from '@/components/form/TFileUpload.vue'
 
 const route = useRoute()
 const appStore = useAppStore()
@@ -93,6 +204,36 @@ const isDev = import.meta.env.DEV
 const windowWidth = ref(window.innerWidth)
 const windowHeight = ref(window.innerHeight)
 const userAgent = ref(navigator.userAgent)
+
+// 组件预览 demo 数据
+const demoText = ref('')
+const demoPwd = ref('')
+const demoSelect = ref('option1')
+const demoCheck1 = ref(true)
+const demoCheck2 = ref(false)
+const demoSwitch1 = ref(true)
+const demoSwitch2 = ref(false)
+const demoNumber = ref(10)
+const demoRadio = ref('option1')
+const demoDate = ref('')
+const demoMonth = ref('')
+const demoYear = ref('')
+const demoTime = ref('')
+const demoDateTime = ref('')
+const demoDateRange = ref('')
+const demoMonthRange = ref('')
+const demoYearRange = ref('')
+const demoFile = ref<File | null>(null)
+const selectOptions = [
+  { value: 'option1', label: '选项一' },
+  { value: 'option2', label: '选项二' },
+  { value: 'option3', label: '选项三' },
+]
+const radioOptions = [
+  { value: 'option1', label: '选项一' },
+  { value: 'option2', label: '选项二' },
+  { value: 'option3', label: '选项三' },
+]
 
 // 图标列表 — 与 SvgIcon.vue 的 iconMap 保持一致
 const iconList = [

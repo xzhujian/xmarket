@@ -1,7 +1,7 @@
 <template>
-  <label class="checkbox-wrapper" :style="{ cursor: disabled ? 'not-allowed' : 'pointer' }">
-    <span class="checkbox-visual" :class="{ checked: modelValue, disabled }" :style="{ borderColor: modelValue ? 'var(--accent-color)' : 'var(--line-color)', background: modelValue ? 'var(--accent-color)' : 'transparent' }">
-      <svg v-if="modelValue" class="checkbox-check" viewBox="0 0 12 12" fill="none">
+  <label class="tcb-wrap">
+    <span class="tcb-visual" :class="{ checked: modelValue, disabled }">
+      <svg v-if="modelValue" class="tcb-check" viewBox="0 0 12 12" fill="none">
         <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </span>
@@ -9,10 +9,10 @@
       type="checkbox"
       :checked="modelValue"
       :disabled="disabled"
-      class="checkbox-native"
+      class="tcb-native"
       @change="$emit('update:modelValue', ($event.target as HTMLInputElement).checked)"
     />
-    <span v-if="label" class="checkbox-label" :style="{ color: disabled ? 'var(--disabled-color)' : 'var(--text-color)' }">{{ label }}</span>
+    <span v-if="label" class="tcb-label" :class="{ disabled }">{{ label }}</span>
   </label>
 </template>
 
@@ -29,14 +29,19 @@ defineEmits<{
 </script>
 
 <style scoped>
-.checkbox-wrapper {
+.tcb-wrap {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   user-select: none;
+  cursor: pointer;
 }
 
-.checkbox-native {
+.tcb-wrap:has(.tcb-native:disabled) {
+  cursor: not-allowed;
+}
+
+.tcb-native {
   position: absolute;
   opacity: 0;
   width: 0;
@@ -44,33 +49,39 @@ defineEmits<{
   pointer-events: none;
 }
 
-.checkbox-visual {
+.tcb-visual {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 18px;
   height: 18px;
-  border: 2px solid;
+  border: 2px solid var(--line-color);
   border-radius: 4px;
+  background: transparent;
   transition: all 0.2s;
   flex-shrink: 0;
 }
 
-.checkbox-visual.checked {
+.tcb-visual.checked {
   border-color: var(--accent-color);
   background: var(--accent-color);
 }
 
-.checkbox-visual.disabled {
+.tcb-visual.disabled {
   opacity: 0.5;
 }
 
-.checkbox-check {
+.tcb-check {
   width: 10px;
   height: 10px;
 }
 
-.checkbox-label {
+.tcb-label {
   font-size: 14px;
+  color: var(--text-color);
+}
+
+.tcb-label.disabled {
+  color: var(--disabled-color);
 }
 </style>

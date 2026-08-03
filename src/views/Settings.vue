@@ -22,7 +22,7 @@
             @click="draftLayout = opt.value"
           >
             <input type="radio" :value="opt.value" :checked="draftLayout === opt.value" class="accent-[var(--accent-color)]" />
-            <span class="text-sm" :style="{ color: 'var(--text-color)' }">{{ $t(opt.label) }}</span>
+            <span class="text-sm" :style="{ color: draftLayout === opt.value ? 'var(--text-active-color)' : 'var(--text-color)' }">{{ $t(opt.label) }}</span>
           </label>
         </div>
       </Card>
@@ -48,43 +48,17 @@
 
       <!-- 操作按钮 -->
       <div class="flex items-end justify-between pt-4">
-        <button
-          class="px-4 py-2 rounded-lg text-sm font-medium transition-all"
-          :style="{
-            background: 'transparent',
-            color: 'var(--text-color)',
-            border: '1px solid var(--line-color)',
-          }"
-          @click="resetDefaults"
-        >
+        <TButton variant="outline" @click="resetDefaults">
           {{ $t('common.reset') }}
-        </button>
+        </TButton>
 
         <div class="flex items-center gap-3">
-          <button
-            class="px-5 py-2 rounded-lg text-sm font-medium transition-all"
-            :style="{
-              background: 'var(--accent-color)',
-              color: '#fff',
-              opacity: isDirty ? 1 : 0.5,
-              cursor: isDirty ? 'pointer' : 'default',
-            }"
-            :disabled="!isDirty"
-            @click="onSave"
-          >
+          <TButton variant="accent" :disabled="!isDirty" @click="onSave">
             {{ $t('common.save') }}
-          </button>
-          <button
-            class="px-5 py-2 rounded-lg text-sm font-medium transition-all"
-            :style="{
-              background: 'transparent',
-              color: 'var(--text-color)',
-              border: '1px solid var(--line-color)',
-            }"
-            @click="onReset"
-          >
+          </TButton>
+          <TButton variant="outline" @click="onReset">
             {{ $t('common.cancel') }}
-          </button>
+          </TButton>
         </div>
       </div>
     </div>
@@ -98,6 +72,7 @@ import { useAppStore } from '@/stores/app'
 import type { AccentTheme } from '@/stores/app'
 import Card from '@/components/Card.vue'
 import Select from '@/components/form/TSelect.vue'
+import TButton from '@/components/form/TButton.vue'
 
 const { locale } = useI18n()
 const appStore = useAppStore()

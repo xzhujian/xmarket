@@ -6,16 +6,9 @@
       </IconBox>
       <h2 class="text-2xl font-semibold mb-2" :style="{ color: 'var(--text-color)' }">{{ $t('welcome.title') }}</h2>
       <p class="mb-6" :style="{ color: 'var(--disabled-color)' }">{{ $t('welcome.description') }}</p>
-      <button
-        class="px-6 py-2.5 rounded-lg text-white font-medium transition-all duration-200 flex items-center gap-2 mx-auto"
-        :style="{ background: 'var(--accent-color)' }"
-        @click="$router.push('/market')"
-        @mouseenter="($event.currentTarget as HTMLElement).style.background = 'var(--accent-hover)'"
-        @mouseleave="($event.currentTarget as HTMLElement).style.background = 'var(--accent-color)'"
-      >
-        <SvgIcon name="market" :size="18" />
+      <TButton variant="accent" icon="market" @click="$router.push('/market')">
         {{ $t('nav.market') }}
-      </button>
+      </TButton>
     </div>
     <div v-else class="w-full">
       <h2 class="text-lg font-semibold mb-4" :style="{ color: 'var(--text-color)' }">{{ $t('nav.home') }}</h2>
@@ -47,6 +40,7 @@ import { computed } from 'vue'
 import { usePluginStore } from '@/stores/plugins'
 import SvgIcon from '@/components/SvgIcon.vue'
 import IconBox from '@/components/IconBox.vue'
+import TButton from '@/components/form/TButton.vue'
 
 const pluginStore = usePluginStore()
 const plugins = computed(() => pluginStore.enabledPlugins)

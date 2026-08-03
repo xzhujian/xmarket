@@ -4,6 +4,7 @@
   --accent-hover: #d97706;
   --accent-rgb: 245, 158, 11;
   --bg-active-msg: #f59e0b;
+  --text-active-color: #18181c;
 }
 
 html[data-theme='dark'].accent-orange {
@@ -11,4 +12,5 @@ html[data-theme='dark'].accent-orange {
   --accent-hover: #fbbf24;
   --accent-rgb: 245, 158, 11;
   --bg-active-msg: rgba(245, 158, 11, 0.6);
+  --text-active-color: #fff;
 }

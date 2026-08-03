@@ -6,10 +6,11 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: Home, meta: { title: 'nav.home' } },
     { path: '/market', name: 'market', component: () => import('@/views/Market.vue'), meta: { title: 'nav.market' } },
-    { path: '/market/my', name: 'my-apps', component: () => import('@/views/MyApps.vue'), meta: { title: 'nav.my_apps' } },
+    { path: '/my-apps', name: 'my-apps', component: () => import('@/views/MyApps.vue'), meta: { title: 'nav.my_apps' } },
     { path: '/messages', name: 'messages', component: () => import('@/views/Messages.vue'), meta: { title: 'nav.messages' } },
     { path: '/settings', name: 'settings', component: () => import('@/views/Settings.vue'), meta: { title: 'nav.settings' } },
     { path: '/about', name: 'about', component: () => import('@/views/About.vue'), meta: { title: 'nav.about' } },
+    { path: '/plugin/:id', name: 'plugin', component: () => import('@/views/PluginHost.vue'), meta: { title: '插件' } },
   ],
 })
 

@@ -1,23 +1,17 @@
 <template>
   <div class="tsel-wrapper">
-    <label v-if="label" class="tsel-label" :style="{ color: 'var(--text-color)' }">{{ label }}</label>
+    <label v-if="label" class="tsel-label">{{ label }}</label>
     <div class="tsel-container" ref="containerRef">
       <!-- 触发器按钮 -->
       <button
         type="button"
         class="tsel-trigger"
-        :class="{ open }"
+        :class="{ open, disabled, error: !!error }"
         :disabled="disabled"
-        :style="{
-          color: disabled ? 'var(--disabled-color)' : 'var(--text-color)',
-          background: 'var(--search-bg-color)',
-          borderColor: error ? '#ef4444' : 'var(--line-color)',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-        }"
         @click="toggle"
       >
         <span>{{ selectedLabel || placeholder || '' }}</span>
-        <span class="tsel-arrow" :class="{ open }" :style="{ color: 'var(--disabled-color)' }">
+        <span class="tsel-arrow" :class="{ open }">
           <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
             <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
@@ -26,17 +20,15 @@
 
       <!-- 自定义下拉面板 -->
       <Transition name="tsel-drop">
-        <div v-if="open" class="tsel-panel" :style="{ background: 'var(--bg-setting-item)', borderColor: 'var(--line-color)' }">
+        <div v-if="open" class="tsel-panel">
           <button
             v-for="(opt, idx) in options"
             :key="opt.value"
             type="button"
             class="tsel-option"
-            :class="{ selected: modelValue === opt.value }"
-            :style="{
-              color: modelValue === opt.value ? '#fff' : 'var(--text-color)',
-              background: modelValue === opt.value ? 'var(--bg-active-msg)' : 'transparent',
-              borderTop: idx > 0 ? '1px solid var(--line-color)' : 'none',
+            :class="{
+              selected: modelValue === opt.value,
+              'has-border': idx > 0,
             }"
             @click="select(opt.value)"
           >
@@ -112,13 +104,14 @@ onUnmounted(() => {
 .tsel-label {
   font-size: 13px;
   font-weight: 500;
+  color: var(--text-color);
 }
 
 .tsel-container {
   position: relative;
 }
 
-/* 触发器 */
+/* ===== 触发器 ===== */
 .tsel-trigger {
   display: flex;
   align-items: center;
@@ -129,9 +122,12 @@ onUnmounted(() => {
   font-size: 14px;
   line-height: 1.4;
   font-family: inherit;
-  border: 1px solid;
+  border: 1px solid var(--line-color);
   outline: none;
   text-align: left;
+  color: var(--text-color);
+  background: var(--search-bg-color);
+  cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -144,33 +140,44 @@ onUnmounted(() => {
   box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
 }
 
-/* 箭头动画 */
+.tsel-trigger.disabled {
+  color: var(--disabled-color);
+  cursor: not-allowed;
+}
+
+.tsel-trigger.error {
+  border-color: #ef4444;
+}
+
+/* ===== 箭头动画 ===== */
 .tsel-arrow {
   display: flex;
   align-items: center;
   transition: transform 0.25s ease;
   flex-shrink: 0;
   margin-left: 8px;
+  color: var(--disabled-color);
 }
 
 .tsel-arrow.open {
   transform: rotate(180deg);
 }
 
-/* 下拉面板 */
+/* ===== 下拉面板 ===== */
 .tsel-panel {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  border: 1px solid;
+  border: 1px solid var(--line-color);
   border-radius: 8px;
   overflow: hidden;
   z-index: 50;
+  background: var(--bg-setting-item);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
-/* 选项 */
+/* ===== 选项 ===== */
 .tsel-option {
   display: block;
   width: 100%;
@@ -180,25 +187,40 @@ onUnmounted(() => {
   text-align: left;
   border: none;
   cursor: pointer;
+  color: var(--text-color);
+  background: transparent;
   transition: background 0.15s;
 }
 
+.tsel-option:active {
+  transform: none;
+}
+
+.tsel-option.has-border {
+  border-top: 1px solid var(--line-color);
+}
+
 .tsel-option:hover {
-  filter: brightness(0.92);
+  background: var(--bg-left-menu-hover);
 }
 
-html[data-theme='dark'] .tsel-option:hover {
-  filter: brightness(1.35);
+.tsel-option.selected {
+  color: var(--text-active-color);
+  background: var(--bg-active-msg);
 }
 
-/* 错误提示 */
+.tsel-option.selected:hover {
+  background: var(--bg-active-msg);
+}
+
+/* ===== 错误提示 ===== */
 .tsel-error {
   font-size: 12px;
   color: #ef4444;
   margin: 0;
 }
 
-/* 下拉展开/收起动画 */
+/* ===== 下拉动画 ===== */
 .tsel-drop-enter-active {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }

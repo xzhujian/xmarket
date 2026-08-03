@@ -1,16 +1,16 @@
 <template>
-  <label class="switch-wrapper" :style="{ cursor: disabled ? 'not-allowed' : 'pointer' }">
-    <span class="switch-track" :class="{ checked: modelValue, disabled }" :style="{ background: modelValue ? 'var(--accent-color)' : 'var(--line-color)' }">
-      <span class="switch-thumb" :class="{ checked: modelValue }" />
+  <label class="tsw-wrap">
+    <span class="tsw-track" :class="{ checked: modelValue, disabled }">
+      <span class="tsw-thumb" :class="{ checked: modelValue }" />
     </span>
     <input
       type="checkbox"
       :checked="modelValue"
       :disabled="disabled"
-      class="switch-native"
+      class="tsw-native"
       @change="$emit('update:modelValue', ($event.target as HTMLInputElement).checked)"
     />
-    <span v-if="label" class="switch-label" :style="{ color: disabled ? 'var(--disabled-color)' : 'var(--text-color)' }">{{ label }}</span>
+    <span v-if="label" class="tsw-label" :class="{ disabled }">{{ label }}</span>
   </label>
 </template>
 
@@ -27,14 +27,19 @@ defineEmits<{
 </script>
 
 <style scoped>
-.switch-wrapper {
+.tsw-wrap {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   user-select: none;
+  cursor: pointer;
 }
 
-.switch-native {
+.tsw-wrap:has(.tsw-native:disabled) {
+  cursor: not-allowed;
+}
+
+.tsw-native {
   position: absolute;
   opacity: 0;
   width: 0;
@@ -42,20 +47,25 @@ defineEmits<{
   pointer-events: none;
 }
 
-.switch-track {
+.tsw-track {
   position: relative;
   width: 40px;
   height: 22px;
   border-radius: 11px;
+  background: var(--line-color);
   transition: background 0.2s;
   flex-shrink: 0;
 }
 
-.switch-track.disabled {
+.tsw-track.checked {
+  background: var(--accent-color);
+}
+
+.tsw-track.disabled {
   opacity: 0.5;
 }
 
-.switch-thumb {
+.tsw-thumb {
   position: absolute;
   top: 2px;
   left: 2px;
@@ -67,11 +77,16 @@ defineEmits<{
   transition: transform 0.2s;
 }
 
-.switch-thumb.checked {
+.tsw-thumb.checked {
   transform: translateX(18px);
 }
 
-.switch-label {
+.tsw-label {
   font-size: 14px;
+  color: var(--text-color);
+}
+
+.tsw-label.disabled {
+  color: var(--disabled-color);
 }
 </style>

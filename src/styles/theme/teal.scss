@@ -4,6 +4,7 @@
   --accent-hover: #0f7d6a;
   --accent-rgb: 19, 152, 127;
   --bg-active-msg: #13987f;
+  --text-active-color: #fff;
 }
 
 html[data-theme='dark'].accent-teal {
@@ -11,4 +12,5 @@ html[data-theme='dark'].accent-teal {
   --accent-hover: #1ab292;
   --accent-rgb: 19, 152, 127;
   --bg-active-msg: rgba(19, 152, 127, 0.6);
+  --text-active-color: #fff;
 }

@@ -25,6 +25,8 @@
           v-for="plugin in enabledPlugins"
           :key="plugin.id"
           class="nav-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer text-sm whitespace-nowrap"
+          :class="{ active: currentRoute === `/plugin/${plugin.id}` }"
+          @click="navigate(`/plugin/${plugin.id}`)"
         >
           <SvgIcon name="package" :size="16" :style="{ color: 'var(--accent-color)' }" />
           <span>{{ plugin.name }}</span>
@@ -92,6 +94,7 @@ const enabledPlugins = computed(() => pluginStore.enabledPlugins)
 const systemItems = [
   { path: '/', icon: 'home', label: 'nav.home' },
   { path: '/market', icon: 'market', label: 'nav.market' },
+  { path: '/my-apps', icon: 'grid', label: 'nav.my_apps' },
 ]
 
 function navigate(path: string) {
@@ -109,7 +112,7 @@ function navigate(path: string) {
       background: var(--bg-left-menu-hover);
     }
     &.active {
-      color: #fff;
+      color: var(--text-active-color);
       background: var(--bg-active-msg);
     }
   }
