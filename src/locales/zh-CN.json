@@ -20,7 +20,8 @@
     "delete": "删除",
     "loading": "加载中...",
     "reset": "恢复默认",
-    "saved": "已保存"
+    "saved": "已保存",
+    "refresh": "刷新"
   },
   "layout": {
     "layout1": "精简侧栏",

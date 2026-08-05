@@ -16,8 +16,30 @@
       <span class="text-sm font-medium" :style="{ color: 'var(--text-color)' }">Framework App</span>
     </div>
 
-    <!-- 右侧：窗口控制按钮 -->
-    <div class="flex h-full" data-tauri-drag-region="false">
+    <!-- 右侧：应用功能 + 窗口控制 -->
+    <div class="flex h-full items-center" data-tauri-drag-region="false">
+      <!-- 亮暗切换 / 设置 -->
+      <div class="flex items-center gap-0.5 px-1">
+        <button
+          class="tb-btn flex items-center justify-center"
+          :title="appStore.isDark ? $t('theme.light') : $t('theme.dark')"
+          @click="appStore.isDark = !appStore.isDark"
+        >
+          <SvgIcon :name="appStore.isDark ? 'sun' : 'moon'" :size="15" />
+        </button>
+        <button
+          class="tb-btn flex items-center justify-center"
+          :title="$t('nav.settings')"
+          @click="openSettings"
+        >
+          <SvgIcon name="settings" :size="15" />
+        </button>
+      </div>
+
+      <!-- 分隔线 -->
+      <div class="title-divider"></div>
+
+      <!-- 窗口控制按钮 -->
       <!-- 最小化 -->
       <button
         class="win-btn flex items-center justify-center"
@@ -85,9 +107,11 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/stores/app'
+import { useSettingsWindow } from '@/composables/useSettingsWindow'
 import SvgIcon from '@/components/SvgIcon.vue'
 
 const appStore = useAppStore()
+const { openInNewWindow } = useSettingsWindow()
 const isMaximized = ref(false)
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
@@ -114,6 +138,10 @@ async function closeWin() {
   if (!isTauri) return
   const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow')
   await getCurrentWebviewWindow().close()
+}
+
+function openSettings() {
+  openInNewWindow()
 }
 
 async function updateMaximized() {
@@ -150,5 +178,31 @@ onUnmounted(() => {
 
 .win-btn:active {
   transform: none;
+}
+
+.tb-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-color);
+  transition: background 0.2s;
+}
+
+.tb-btn:hover {
+  background: var(--bg-hover-muted);
+}
+
+.title-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--line-color);
+  flex-shrink: 0;
 }
 </style>

@@ -32,41 +32,6 @@
           <span>{{ plugin.name }}</span>
         </button>
       </div>
-
-      <!-- 右侧操作区：亮暗切换 / 消息 / 设置 / 关于 -->
-      <div class="flex items-center gap-0.5 ml-2">
-        <button
-          class="nav-btn flex items-center gap-1 px-3 py-1.5 rounded-lg cursor-pointer text-sm"
-          :title="appStore.isDark ? $t('theme.light') : $t('theme.dark')"
-          @click="appStore.isDark = !appStore.isDark"
-        >
-          <SvgIcon :name="appStore.isDark ? 'sun' : 'moon'" :size="18" />
-        </button>
-        <button
-          class="nav-btn flex items-center gap-1 px-3 py-1.5 rounded-lg cursor-pointer text-sm"
-          :class="{ active: currentRoute === '/messages' }"
-          :title="$t('nav.messages')"
-          @click="navigate('/messages')"
-        >
-          <SvgIcon name="messages" :size="18" />
-        </button>
-        <button
-          class="nav-btn flex items-center gap-1 px-3 py-1.5 rounded-lg cursor-pointer text-sm"
-          :class="{ active: currentRoute === '/settings' }"
-          :title="$t('nav.settings')"
-          @click="navigate('/settings')"
-        >
-          <SvgIcon name="settings" :size="18" />
-        </button>
-        <button
-          class="nav-btn flex items-center gap-1 px-3 py-1.5 rounded-lg cursor-pointer text-sm"
-          :class="{ active: currentRoute === '/about' }"
-          :title="$t('nav.about')"
-          @click="navigate('/about')"
-        >
-          <SvgIcon name="about" :size="18" />
-        </button>
-      </div>
     </div>
 
     <!-- 内容区（全宽） -->
@@ -95,6 +60,7 @@ const systemItems = [
   { path: '/', icon: 'home', label: 'nav.home' },
   { path: '/market', icon: 'market', label: 'nav.market' },
   { path: '/my-apps', icon: 'grid', label: 'nav.my_apps' },
+  { path: '/messages', icon: 'messages', label: 'nav.messages' },
 ]
 
 function navigate(path: string) {

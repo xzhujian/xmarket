@@ -35,11 +35,11 @@
       }
     ],
     "security": {
-      "csp": null,
+      "csp": "default-src * asset: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * asset: 'unsafe-inline' 'unsafe-eval'; style-src * asset: 'unsafe-inline'; img-src * asset: data: blob:; connect-src * asset:; font-src * data:; media-src *; frame-src *; worker-src *",
       "capabilities": ["default-capability"],
       "assetProtocol": {
         "enable": true,
-        "scope": ["**"]
+        "scope": ["$RESOURCE/**/*"]
       }
     }
   },

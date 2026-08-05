@@ -109,7 +109,12 @@ fn get_plugins_dir(app: &AppHandle) -> PathBuf {
     let resource_dir = app
         .path()
         .resource_dir()
-        .unwrap_or_else(|_| PathBuf::from("."));
+        .unwrap_or_else(|e| {
+            eprintln!("[plugin_manager] 获取 resource_dir 失败: {}, 回退到当前目录", e);
+            PathBuf::from(".")
+        });
+    eprintln!("[plugin_manager] resource_dir = {:?}", resource_dir);
+    eprintln!("[plugin_manager] plugins_dir = {:?}", resource_dir.join("plugins"));
     resource_dir.join("plugins")
 }
 
@@ -118,7 +123,10 @@ fn get_plugins_data_dir(app: &AppHandle) -> PathBuf {
     let resource_dir = app
         .path()
         .resource_dir()
-        .unwrap_or_else(|_| PathBuf::from("."));
+        .unwrap_or_else(|e| {
+            eprintln!("[plugin_manager] 获取 resource_dir 失败: {}, 回退到当前目录", e);
+            PathBuf::from(".")
+        });
     let dir = resource_dir.join("plugins-data");
     fs::create_dir_all(&dir).ok();
     dir

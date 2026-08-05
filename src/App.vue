@@ -1,9 +1,17 @@
 <template>
   <div class="app-root" :class="[`layout-${appStore.layoutType}`, { 'is-dark': appStore.isDark }]">
-    <TitleBar />
-    <div class="flex-1 overflow-hidden">
-      <component :is="currentLayout" />
-    </div>
+    <template v-if="isWindowRoute">
+      <router-view />
+    </template>
+    <template v-else>
+      <TitleBar />
+      <div class="flex-1 overflow-hidden">
+        <component :is="currentLayout" />
+      </div>
+    </template>
+
+    <!-- 全局消息提示（右上角） -->
+    <TToast position="top-right" />
 
     <!-- 调试入口按钮 — 仅在开发模式显示 -->
     <button
@@ -26,6 +34,7 @@ import Layout1 from '@/layouts/Layout1.vue'
 import Layout2 from '@/layouts/Layout2.vue'
 import Layout3 from '@/layouts/Layout3.vue'
 import TitleBar from '@/components/TitleBar.vue'
+import TToast from '@/components/TToast.vue'
 import SvgIcon from '@/components/SvgIcon.vue'
 
 const isDev = import.meta.env.DEV
@@ -40,6 +49,7 @@ const layoutMap: Record<string, any> = {
 }
 
 const currentLayout = computed(() => layoutMap[appStore.layoutType] || Layout1)
+const isWindowRoute = computed(() => route.path.startsWith('/window'))
 
 function toggleDebug() {
   if (route.path === '/debug') {
@@ -50,8 +60,7 @@ function toggleDebug() {
 }
 
 onMounted(() => {
-  // 应用暗色模式
-  document.documentElement.setAttribute('data-theme', appStore.isDark ? 'dark' : 'light')
+  appStore.init()
   document.documentElement.setAttribute('data-blur', '1')
 })
 </script>

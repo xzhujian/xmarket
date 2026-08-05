@@ -36,40 +36,6 @@
         </div>
       </template>
 
-      <!-- 底部工具栏：亮暗切换 / 消息 / 设置 / 关于 -->
-      <div class="mt-auto flex flex-col items-center gap-2">
-        <button
-          class="nav-btn flex items-center justify-center w-10 h-10 rounded-xl cursor-pointer"
-          :title="appStore.isDark ? $t('theme.light') : $t('theme.dark')"
-          @click="appStore.isDark = !appStore.isDark"
-        >
-          <SvgIcon :name="appStore.isDark ? 'sun' : 'moon'" :size="22" />
-        </button>
-        <button
-          class="nav-btn flex items-center justify-center w-10 h-10 rounded-xl cursor-pointer"
-          :class="{ active: currentRoute === '/messages' }"
-          :title="$t('nav.messages')"
-          @click="navigate('/messages')"
-        >
-          <SvgIcon name="messages" :size="22" />
-        </button>
-        <button
-          class="nav-btn flex items-center justify-center w-10 h-10 rounded-xl cursor-pointer"
-          :class="{ active: currentRoute === '/settings' }"
-          :title="$t('nav.settings')"
-          @click="navigate('/settings')"
-        >
-          <SvgIcon name="settings" :size="22" />
-        </button>
-        <button
-          class="nav-btn flex items-center justify-center w-10 h-10 rounded-xl cursor-pointer"
-          :class="{ active: currentRoute === '/about' }"
-          :title="$t('nav.about')"
-          @click="navigate('/about')"
-        >
-          <SvgIcon name="about" :size="22" />
-        </button>
-      </div>
     </div>
 
     <!-- 右侧内容区 -->
@@ -100,6 +66,7 @@ const systemItems = [
   { path: '/', icon: 'home', label: 'nav.home' },
   { path: '/market', icon: 'market', label: 'nav.market' },
   { path: '/my-apps', icon: 'grid', label: 'nav.my_apps' },
+  { path: '/messages', icon: 'messages', label: 'nav.messages' },
 ]
 
 function navigate(path: string) {

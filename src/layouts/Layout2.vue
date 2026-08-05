@@ -42,42 +42,6 @@
         </div>
       </div>
 
-      <!-- 底部工具栏：亮暗切换 / 消息 / 设置 / 关于 -->
-      <div class="border-t px-3 py-2" :style="{ borderColor: 'var(--line-color)' }">
-        <div class="flex flex-col gap-0.5">
-          <button
-            class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm"
-            @click="appStore.isDark = !appStore.isDark"
-          >
-            <SvgIcon :name="appStore.isDark ? 'sun' : 'moon'" :size="20" />
-            <span>{{ appStore.isDark ? $t('theme.light') : $t('theme.dark') }}</span>
-          </button>
-          <button
-            class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm"
-            :class="{ active: currentRoute === '/messages' }"
-            @click="navigate('/messages')"
-          >
-            <SvgIcon name="messages" :size="20" />
-            <span>{{ $t('nav.messages') }}</span>
-          </button>
-          <button
-            class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm"
-            :class="{ active: currentRoute === '/settings' }"
-            @click="navigate('/settings')"
-          >
-            <SvgIcon name="settings" :size="20" />
-            <span>{{ $t('nav.settings') }}</span>
-          </button>
-          <button
-            class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-sm"
-            :class="{ active: currentRoute === '/about' }"
-            @click="navigate('/about')"
-          >
-            <SvgIcon name="about" :size="20" />
-            <span>{{ $t('nav.about') }}</span>
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- 右侧内容区 -->
@@ -108,6 +72,7 @@ const systemItems = [
   { path: '/', icon: 'home', label: 'nav.home' },
   { path: '/market', icon: 'market', label: 'nav.market' },
   { path: '/my-apps', icon: 'grid', label: 'nav.my_apps' },
+  { path: '/messages', icon: 'messages', label: 'nav.messages' },
 ]
 
 function navigate(path: string) {

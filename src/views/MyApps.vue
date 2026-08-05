@@ -4,16 +4,7 @@
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg font-semibold" :style="{ color: 'var(--text-color)' }">{{ $t('market.my_apps') }}</h2>
       <div class="flex items-center gap-2">
-        <TButton variant="outline" @click="loadPlugins">
-          <span class="flex items-center gap-1.5">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10" />
-              <polyline points="1 20 1 14 7 14" />
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-            </svg>
-            <span>刷新</span>
-          </span>
-        </TButton>
+        <TButton variant="text" icon="refresh" :icon-size="18" @click="loadPlugins" :title="$t('common.refresh')" />
         <TButton variant="accent" @click="selectZipFile">
           <span class="flex items-center gap-1.5">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -24,17 +15,6 @@
             <span>安装插件</span>
           </span>
         </TButton>
-      </div>
-    </div>
-
-    <!-- 测试区：子 WebView 测试 -->
-    <div class="mb-4 p-3 rounded-lg" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
-      <div class="flex items-center gap-2 mb-2">
-        <TButton variant="accent" @click="testWebview">测试子 WebView（红色页面）</TButton>
-        <TButton variant="outline" @click="closeTestWebview">关闭</TButton>
-      </div>
-      <div class="text-xs" :style="{ color: 'var(--disabled-color)' }">
-        测试状态: {{ testStatus }}
       </div>
     </div>
 
@@ -95,7 +75,7 @@
 
     <!-- 卸载确认弹窗 -->
     <div v-if="uninstallTarget" class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(0,0,0,0.4)">
-      <div class="rounded-xl p-6 w-80" :style="{ background: 'var(--bg-card)', border: '1px solid var(--line-color)' }">
+      <div class="rounded-xl p-6 w-80" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
         <h3 class="font-semibold mb-2" :style="{ color: 'var(--text-color)' }">确认卸载</h3>
         <p class="text-sm mb-4" :style="{ color: 'var(--disabled-color)' }">
           确定要卸载 <strong :style="{ color: 'var(--text-color)' }">{{ uninstallTarget.name }}</strong> 吗？<br>
@@ -141,49 +121,6 @@ async function loadPlugins() {
   } finally {
     loading.value = false
   }
-}
-
-// 子 WebView 测试
-const testStatus = ref('未测试')
-
-const TEST_URL = 'data:text/html,' + encodeURIComponent(`
-<html><body style="margin:0;background:linear-gradient(135deg,#ff6b6b,#ee5a24);display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
-<div style="background:white;padding:40px 60px;border-radius:16px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-<h1 style="color:#333;margin:0 0 8px;">✅ 子 WebView 测试</h1>
-<p style="color:#666;margin:0;">如果你能看到这个页面，说明子 WebView 正常工作！</p>
-</div>
-</body></html>
-`)
-
-async function testWebview() {
-  testStatus.value = '正在创建弹出窗口...'
-  try {
-    const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
-    const popup = new WebviewWindow('test-popup', {
-      url: TEST_URL,
-      title: '测试窗口',
-      width: 500,
-      height: 400,
-      center: true,
-    })
-    popup.once('tauri://created', () => {
-      testStatus.value = '弹出窗口已创建 ✓'
-    })
-    popup.once('tauri://error', (e: any) => {
-      testStatus.value = `创建失败: ${JSON.stringify(e)}`
-    })
-  } catch (err: any) {
-    testStatus.value = `创建失败: ${err?.message || err}`
-  }
-}
-
-async function closeTestWebview() {
-  try {
-    const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow')
-    const popup = await WebviewWindow.getByLabel('test-popup')
-    if (popup) await popup.close()
-    testStatus.value = '已关闭'
-  } catch { /* 忽略 */ }
 }
 
 async function selectZipFile() {

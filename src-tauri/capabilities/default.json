@@ -1,7 +1,7 @@
 {
   "identifier": "default-capability",
   "description": "Default capability for the main window",
-  "windows": ["main"],
+  "windows": ["main", "settings"],
   "permissions": [
     "core:default",
     "core:window:default",
@@ -12,6 +12,7 @@
     "core:webview:allow-set-webview-focus",
     "core:webview:allow-webview-hide",
     "core:webview:allow-webview-show",
+    "core:webview:allow-webview-close",
     "core:webview:allow-create-webview-window",
     "core:window:allow-start-dragging",
     "core:window:allow-minimize",

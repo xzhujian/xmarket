@@ -6,13 +6,11 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { usePluginStore } from '@/stores/plugins'
-import { useDebugStore } from '@/stores/debug'
 import { usePluginWebview } from '@/composables/usePluginWebview'
 import { convertFileSrc } from '@tauri-apps/api/core'
 
 const route = useRoute()
 const pluginStore = usePluginStore()
-const debugStore = useDebugStore()
 
 const containerRef = ref<HTMLElement | null>(null)
 const pluginView = usePluginWebview(containerRef)
@@ -37,10 +35,7 @@ onMounted(async () => {
   await nextTick()
 
   if (plugin.value && pluginUrl.value) {
-    debugStore.info(`加载插件: ${plugin.value.name}`)
     await pluginView.open(pluginUrl.value)
-  } else {
-    debugStore.warn(`插件未找到: ${pluginId.value}`)
   }
 })
 
@@ -52,7 +47,6 @@ onBeforeRouteLeave((to, from, next) => {
 
 watch([pluginId, plugin], async ([id, p]) => {
   if (p && pluginUrl.value) {
-    debugStore.info(`切换插件: ${p.name}`)
     await pluginView.navigate(pluginUrl.value)
   }
 })

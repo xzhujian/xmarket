@@ -1,11 +1,9 @@
 import { ref, onUnmounted, type Ref } from 'vue'
 import { Webview } from '@tauri-apps/api/webview'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { useDebugStore } from '@/stores/debug'
 
 export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
   const LABEL = 'plugin-content'
-  const debug = useDebugStore()
 
   const currentUrl = ref('')
   let wvInstance: Webview | null = null
@@ -34,12 +32,7 @@ export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
     await close()
 
     const rect = getContainerRect()
-    if (!rect) {
-      debug.warn('容器无尺寸，跳过创建')
-      return
-    }
-
-    debug.info(`创建子 WebView (${rect.width}×${rect.height} @ ${rect.x},${rect.y})`)
+    if (!rect) return
 
     currentUrl.value = url
 
@@ -52,9 +45,7 @@ export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
         width: rect.width,
         height: rect.height,
       })
-      debug.info('子 WebView 创建成功')
-    } catch (err) {
-      debug.error(`创建子 WebView 失败: ${err}`)
+    } catch {
       wvInstance = null
     }
   }
@@ -67,10 +58,7 @@ export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
     if (!wvInstance) return
     try {
       await wvInstance.hide()
-      debug.info('子 WebView 已隐藏')
-    } catch (err) {
-      debug.error(`隐藏子 WebView 失败: ${err}`)
-    }
+    } catch { /* 忽略 */ }
   }
 
   /** 显示子 WebView */
@@ -81,14 +69,10 @@ export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
     if (!wvInstance) return
     try {
       await wvInstance.show()
-      debug.info('子 WebView 已显示')
-    } catch (err) {
-      debug.error(`显示子 WebView 失败: ${err}`)
-    }
+    } catch { /* 忽略 */ }
   }
 
   async function navigate(url: string) {
-    debug.info(`切换插件: ${url}`)
     await close()
     await open(url)
   }
@@ -97,7 +81,6 @@ export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
     if (wvInstance) {
       try {
         await wvInstance.close()
-        debug.info('子 WebView 已关闭')
       } catch { /* 忽略 */ }
       wvInstance = null
     } else {
@@ -105,7 +88,6 @@ export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
       if (existing) {
         try {
           await existing.close()
-          debug.info('已关闭残留 WebView')
         } catch { /* 忽略 */ }
       }
     }

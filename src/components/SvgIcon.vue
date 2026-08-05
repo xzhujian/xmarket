@@ -41,6 +41,8 @@ const iconMap: Record<string, any> = {
   'chevron-right': LucideIcons.ChevronRight,
   'chevron-left': LucideIcons.ChevronLeft,
   grid: LucideIcons.Grid,
+  refresh: LucideIcons.RefreshCw,
+  star: LucideIcons.Star,
 }
 
 const iconComponent = computed(() => iconMap[props.name] || LucideIcons.HelpCircle)

@@ -20,7 +20,8 @@
     "delete": "Delete",
     "loading": "Loading...",
     "reset": "Defaults",
-    "saved": "Saved"
+    "saved": "Saved",
+    "refresh": "Refresh"
   },
   "layout": {
     "layout1": "Compact Sidebar",

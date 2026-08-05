@@ -2,138 +2,87 @@
   <div class="market-page">
     <h2 class="text-lg font-semibold mb-4" :style="{ color: 'var(--text-color)' }">{{ $t('market.all_apps') }}</h2>
 
-    <!-- 本地安装 -->
-    <Card title="安装插件">
-      <div class="flex items-center gap-3">
-        <button
-          class="install-btn flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all"
-          :style="{
-            background: 'var(--accent-color)',
-            color: '#fff',
-          }"
-          @click="selectZipFile"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          选择 .zip 文件
-        </button>
-        <span v-if="installing" class="text-sm" :style="{ color: 'var(--disabled-color)' }">
-          正在安装...
-        </span>
-        <span v-if="installSuccess" class="text-sm" style="color: #22c55e">
-          安装成功 ✓
-        </span>
-      </div>
-    </Card>
+    <!-- 分类导航（静态占位） -->
+    <div class="flex gap-2 mb-6 overflow-x-auto pb-2" style="scrollbar-width: none;">
+      <span
+        class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap cursor-default transition-all"
+        :style="{
+          background: 'var(--accent-color)',
+          color: '#fff',
+        }"
+      >全部</span>
+      <span
+        v-for="cat in categories"
+        :key="cat"
+        class="px-4 py-1.5 rounded-full text-sm whitespace-nowrap cursor-default transition-all"
+        :style="{
+          background: 'var(--bg-setting-item)',
+          color: 'var(--disabled-color)',
+          border: '1px solid var(--line-color)',
+        }"
+      >{{ cat }}</span>
+    </div>
 
-    <!-- 已安装插件列表 -->
-    <Card title="已安装的插件">
-      <div class="space-y-3">
-        <div
-          v-for="plugin in pluginStore.plugins"
-          :key="plugin.id"
-          class="plugin-item flex items-center justify-between p-4 rounded-xl transition-all duration-200"
-          :style="{
-            background: 'var(--bg-setting-item)',
-            border: '1px solid var(--line-color)',
-            opacity: plugin.enabled ? 1 : 0.5,
-          }"
-        >
-          <div class="flex items-center gap-3">
-            <IconBox size="sm">
-              <SvgIcon name="package" :size="20" :style="{ color: 'var(--accent-color)' }" />
-            </IconBox>
-            <div>
-              <h3 class="font-medium" :style="{ color: 'var(--text-color)' }">{{ plugin.name }}</h3>
-              <p class="text-xs mt-0.5" :style="{ color: 'var(--disabled-color)' }">{{ plugin.version }}</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <TButton variant="outline" icon="download" @click="packPlugin(plugin)">
-              打包
-            </TButton>
-            <TButton
-              :variant="plugin.enabled ? 'outline' : 'accent'"
-              @click="pluginStore.toggleEnabled(plugin.id)"
-            >
-              {{ plugin.enabled ? $t('common.disable') : $t('common.enable') }}
-            </TButton>
+    <!-- 推荐插件（静态占位卡片） -->
+    <div class="text-xs font-medium mb-3" :style="{ color: 'var(--disabled-color)' }">推荐插件</div>
+    <div class="grid gap-4" style="grid-template-columns: repeat(auto-fill, minmax(260px, 1fr))">
+      <div
+        v-for="(item, idx) in featured"
+        :key="idx"
+        class="rounded-xl p-4 transition-all duration-200"
+        :style="{
+          background: 'var(--bg-setting-item)',
+          border: '1px solid var(--line-color)',
+        }"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          <div
+            class="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+            :style="{ background: item.color + '22', color: item.color }"
+          >{{ item.emoji }}</div>
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-sm" :style="{ color: 'var(--text-color)' }">{{ item.name }}</div>
+            <div class="text-xs mt-0.5" :style="{ color: 'var(--disabled-color)' }">{{ item.desc }}</div>
           </div>
         </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs" :style="{ color: 'var(--disabled-color)' }">v{{ item.version }}</span>
+          <span
+            class="text-xs px-3 py-1 rounded-full font-medium cursor-default"
+            :style="{
+              background: 'var(--accent-color)',
+              color: '#fff',
+              opacity: 0.6,
+            }"
+          >{{ item.status }}</span>
+        </div>
       </div>
-      <EmptyState v-if="!pluginStore.plugins.length" icon="package" text="暂无插件，请安装" />
-    </Card>
+    </div>
+
+    <!-- 即将上线 -->
+    <div class="mt-8 text-center py-12 rounded-xl" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
+      <div class="text-3xl mb-3">🚀</div>
+      <div class="text-sm font-medium" :style="{ color: 'var(--text-color)' }">更多插件即将上线</div>
+      <div class="text-xs mt-1" :style="{ color: 'var(--disabled-color)' }">应用市场正在建设中，敬请期待</div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { usePluginStore } from '@/stores/plugins'
-import type { PluginItem } from '@/stores/plugins'
-import { open, save } from '@tauri-apps/plugin-dialog'
-import SvgIcon from '@/components/SvgIcon.vue'
-import IconBox from '@/components/IconBox.vue'
-import Card from '@/components/Card.vue'
-import EmptyState from '@/components/EmptyState.vue'
-import TButton from '@/components/form/TButton.vue'
+const categories = ['工具', '主题', '开发', '游戏', '娱乐', '社交']
 
-const pluginStore = usePluginStore()
-
-const installing = ref(false)
-const installSuccess = ref(false)
-
-onMounted(() => {
-  pluginStore.loadPlugins()
-})
-
-async function selectZipFile() {
-  try {
-    const selected = await open({
-      multiple: false,
-      filters: [{ name: '插件包', extensions: ['zip'] }],
-    })
-    if (!selected) return
-
-    installing.value = true
-    installSuccess.value = false
-
-    await pluginStore.installPlugin(selected as string)
-
-    installSuccess.value = true
-    setTimeout(() => { installSuccess.value = false }, 3000)
-  } catch (err) {
-    console.error('安装失败:', err)
-  } finally {
-    installing.value = false
-  }
-}
-
-async function packPlugin(plugin: PluginItem) {
-  try {
-    const savePath = await save({
-      defaultPath: `${plugin.id}-${plugin.version}.zip`,
-      filters: [{ name: '插件包', extensions: ['zip'] }],
-    })
-    if (!savePath) return
-
-    const result = await pluginStore.packPlugin(plugin.id, savePath)
-    console.log('打包成功:', result)
-  } catch (err) {
-    console.error('打包失败:', err)
-  }
-}
+const featured = [
+  { name: 'Markdown 编辑器', desc: '强大的 Markdown 编辑与预览工具', emoji: '📝', color: '#6366f1', version: '1.0.0', status: '即将上线' },
+  { name: 'JSON 查看器', desc: '格式化与浏览 JSON 数据文件', emoji: '📋', color: '#22c55e', version: '0.9.0', status: '即将上线' },
+  { name: '代码片段管理', desc: '保存与管理常用代码片段', emoji: '📦', color: '#f59e0b', version: '0.8.0', status: '即将上线' },
+  { name: '图片压缩工具', desc: '批量压缩与优化图片文件', emoji: '🖼️', color: '#ec4899', version: '0.5.0', status: '即将上线' },
+  { name: '定时任务', desc: '配置与管理定时执行的任务', emoji: '⏰', color: '#8b5cf6', version: '0.3.0', status: '即将上线' },
+  { name: '网络抓包', desc: 'HTTP 请求拦截与调试工具', emoji: '🔍', color: '#ef4444', version: '0.1.0', status: '即将上线' },
+]
 </script>
 
 <style scoped>
-.install-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.install-btn:active {
-  transform: translateY(0);
+.market-page {
+  -webkit-overflow-scrolling: touch;
 }
 </style>

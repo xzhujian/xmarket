@@ -134,6 +134,40 @@
             <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TFileUpload</div>
             <TFileUpload v-model="demoFile" label="上传文件" hint="点击或拖拽 .zip 文件到此处" accept=".zip,.txt" />
           </div>
+
+          <!-- TRating -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TRating</div>
+            <div class="space-y-3">
+              <TRating v-model="demoRating" show-value />
+              <TRating v-model="demoRating" :count="10" show-value active-color="#13987f" />
+              <TRating v-model="demoRating" readonly />
+            </div>
+          </div>
+
+          <!-- TModal -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TModal</div>
+            <TButton variant="accent" @click="demoShowModal = true">打开弹窗</TButton>
+            <TModal v-model="demoShowModal" title="示例弹窗" size="sm">
+              <p>这是一个弹窗内容区域，支持任意内容。</p>
+              <template #footer>
+                <TButton variant="outline" @click="demoShowModal = false">取消</TButton>
+                <TButton variant="accent" @click="demoShowModal = false">确认</TButton>
+              </template>
+            </TModal>
+          </div>
+
+          <!-- TToast -->
+          <div>
+            <div class="text-xs font-medium mb-2" :style="{ color: 'var(--disabled-color)' }">TToast</div>
+            <div class="flex flex-wrap gap-2">
+              <TButton variant="accent" style="background:#22c55e" @click="showSuccess">成功</TButton>
+              <TButton variant="accent" style="background:#ef4444" @click="showError">失败</TButton>
+              <TButton variant="accent" style="background:#f59e0b" @click="showWarning">警告</TButton>
+              <TButton variant="accent" style="background:#3b82f6" @click="showInfo">信息</TButton>
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -181,6 +215,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useDebugStore } from '@/stores/debug'
+import { useToast } from '@/composables/useToast'
 import type { LogLevel } from '@/stores/debug'
 import SvgIcon from '@/components/SvgIcon.vue'
 import Card from '@/components/Card.vue'
@@ -195,6 +230,8 @@ import TRadioGroup from '@/components/form/TRadioGroup.vue'
 import TDatePicker from '@/components/form/TDatePicker.vue'
 import TDateRangePicker from '@/components/form/TDateRangePicker.vue'
 import TFileUpload from '@/components/form/TFileUpload.vue'
+import TModal from '@/components/form/TModal.vue'
+import TRating from '@/components/form/TRating.vue'
 
 const route = useRoute()
 const appStore = useAppStore()
@@ -224,6 +261,9 @@ const demoDateRange = ref('')
 const demoMonthRange = ref('')
 const demoYearRange = ref('')
 const demoFile = ref<File | null>(null)
+const demoRating = ref(3)
+const demoShowModal = ref(false)
+const { success, error, warning, info } = useToast()
 const selectOptions = [
   { value: 'option1', label: '选项一' },
   { value: 'option2', label: '选项二' },
@@ -241,12 +281,12 @@ const iconList = [
   'sun', 'moon', 'download', 'check', 'close', 'menu', 'search', 'bell',
   'dashboard', 'folder', 'cpu', 'logo', 'package',
   'chevron-right', 'chevron-left',
+  'grid', 'refresh', 'star',
 ]
 
 let resizeHandler: (() => void) | null = null
 
 onMounted(() => {
-  debugStore.info('调试面板已加载')
   resizeHandler = () => {
     windowWidth.value = window.innerWidth
     windowHeight.value = window.innerHeight
@@ -279,4 +319,9 @@ function levelColor(level: LogLevel) {
 function levelLabel(level: LogLevel) {
   return levelLabels[level] || '[INFO]'
 }
+
+function showSuccess() { success('操作成功完成！') }
+function showError() { error('操作失败，请重试') }
+function showWarning() { warning('请注意，此操作不可撤销') }
+function showInfo() { info('数据已同步完成') }
 </script>
