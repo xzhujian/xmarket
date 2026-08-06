@@ -1,4 +1,5 @@
 mod plugin_manager;
+mod plugin_server;
 
 use std::fs;
 use std::path::PathBuf;
@@ -39,12 +40,57 @@ fn write_config(app: tauri::AppHandle, content: String) -> Result<(), String> {
     Ok(())
 }
 
+/// 获取插件 HTTP 服务器的端口号
+#[tauri::command]
+fn get_plugin_server_port() -> Result<u16, String> {
+    plugin_server::get_port().ok_or_else(|| "插件服务器未启动".to_string())
+}
+
+/// 将插件入口 HTML 路径转为 HTTP 服务器 URL
+#[tauri::command]
+fn get_plugin_server_url(app: tauri::AppHandle, entry_html: String) -> Result<String, String> {
+    let port = plugin_server::get_port().ok_or_else(|| "插件服务器未启动".to_string())?;
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("获取资源目录失败: {}", e))?;
+    let plugins_dir = resource_dir.join("plugins");
+    let entry_path = std::path::PathBuf::from(&entry_html);
+    let relative = entry_path
+        .strip_prefix(&plugins_dir)
+        .map_err(|_| format!("插件路径不在插件目录下: {}", entry_html))?;
+    let relative_str = relative.to_string_lossy().replace('\\', "/");
+    Ok(format!("http://127.0.0.1:{}/{}", port, relative_str))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
+        .setup(|app| {
+            // 调试：输出 resource_dir 和 plugins_dir 的实际路径
+            if let Ok(resource_dir) = app.path().resource_dir() {
+                let plugins_dir = resource_dir.join("plugins");
+                eprintln!("[debug] resource_dir = {:?}", resource_dir);
+                eprintln!("[debug] plugins_dir = {:?}", plugins_dir);
+                eprintln!("[debug] plugins_dir.exists() = {}", plugins_dir.exists());
+                if plugins_dir.exists() {
+                    if let Ok(entries) = std::fs::read_dir(&plugins_dir) {
+                        for entry in entries.flatten() {
+                            eprintln!("[debug]   plugin entry: {:?}", entry.path());
+                        }
+                    }
+                }
+
+                // 启动插件 HTTP 服务器
+                plugin_server::start(plugins_dir);
+                let port = plugin_server::get_port().unwrap_or(0);
+                eprintln!("[debug] plugin_server port = {}", port);
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             plugin_manager::scan_plugins,
             plugin_manager::install_plugin,
@@ -53,6 +99,8 @@ pub fn run() {
             plugin_manager::uninstall_plugin,
             read_config,
             write_config,
+            get_plugin_server_port,
+            get_plugin_server_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

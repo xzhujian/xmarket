@@ -7,10 +7,12 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { usePluginStore } from '@/stores/plugins'
 import { usePluginWebview } from '@/composables/usePluginWebview'
-import { convertFileSrc } from '@tauri-apps/api/core'
+import { invoke } from '@tauri-apps/api/core'
+import { useDebugStore } from '@/stores/debug'
 
 const route = useRoute()
 const pluginStore = usePluginStore()
+const debug = useDebugStore()
 
 const containerRef = ref<HTMLElement | null>(null)
 const pluginView = usePluginWebview(containerRef)
@@ -21,11 +23,18 @@ const plugin = computed(() =>
   pluginStore.plugins.find(p => p.id === pluginId.value)
 )
 
-const pluginUrl = computed(() => {
-  if (!plugin.value?.entryHtml) return ''
-  const cleanPath = plugin.value.entryHtml.replace(/^\\\\\?\\/, '')
-  return convertFileSrc(cleanPath)
-})
+const pluginUrl = ref('')
+
+async function resolvePluginUrl(entryHtml: string): Promise<string> {
+  try {
+    const url = await invoke<string>('get_plugin_server_url', { entryHtml })
+    debug.info(`[PluginHost] server URL → ${url}`)
+    return url
+  } catch (e) {
+    debug.error(`[PluginHost] resolve URL failed: ${e}`)
+    return ''
+  }
+}
 
 onMounted(async () => {
   if (!pluginStore.plugins.length) {
@@ -34,8 +43,11 @@ onMounted(async () => {
 
   await nextTick()
 
-  if (plugin.value && pluginUrl.value) {
-    await pluginView.open(pluginUrl.value)
+  if (plugin.value?.entryHtml) {
+    pluginUrl.value = await resolvePluginUrl(plugin.value.entryHtml)
+    if (pluginUrl.value) {
+      await pluginView.open(pluginUrl.value)
+    }
   }
 })
 
@@ -46,8 +58,11 @@ onBeforeRouteLeave((to, from, next) => {
 })
 
 watch([pluginId, plugin], async ([id, p]) => {
-  if (p && pluginUrl.value) {
-    await pluginView.navigate(pluginUrl.value)
+  if (p?.entryHtml) {
+    pluginUrl.value = await resolvePluginUrl(p.entryHtml)
+    if (pluginUrl.value) {
+      await pluginView.navigate(pluginUrl.value)
+    }
   }
 })
 </script>

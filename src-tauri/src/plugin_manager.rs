@@ -113,8 +113,6 @@ fn get_plugins_dir(app: &AppHandle) -> PathBuf {
             eprintln!("[plugin_manager] 获取 resource_dir 失败: {}, 回退到当前目录", e);
             PathBuf::from(".")
         });
-    eprintln!("[plugin_manager] resource_dir = {:?}", resource_dir);
-    eprintln!("[plugin_manager] plugins_dir = {:?}", resource_dir.join("plugins"));
     resource_dir.join("plugins")
 }
 

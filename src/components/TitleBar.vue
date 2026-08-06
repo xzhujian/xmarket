@@ -1,6 +1,6 @@
 <template>
   <div
-    class="title-bar flex items-center justify-between select-none"
+    class="title-bar flex items-center select-none"
     :style="{
       background: appStore.isDark ? '#1b1b1b' : '#f5f5f5',
       borderBottom: '1px solid var(--line-color)',
@@ -8,16 +8,18 @@
       paddingLeft: '12px',
       paddingRight: '0',
     }"
-    data-tauri-drag-region
   >
-    <!-- 左侧：应用名称/图标 -->
-    <div class="flex items-center gap-2" data-tauri-drag-region>
+    <!-- 顶部 resize 热区 -->
+    <div class="resize-handle-top" @mousedown="onResizeTopMouseDown"></div>
+
+    <!-- 左侧：应用名称/图标 + 拖动区域 -->
+    <div ref="dragRegionRef" class="flex items-center gap-2 flex-1 h-full cursor-default">
       <SvgIcon name="logo" :size="16" :style="{ color: 'var(--accent-color)' }" />
       <span class="text-sm font-medium" :style="{ color: 'var(--text-color)' }">Framework App</span>
     </div>
 
     <!-- 右侧：应用功能 + 窗口控制 -->
-    <div class="flex h-full items-center" data-tauri-drag-region="false">
+    <div class="flex h-full items-center">
       <!-- 亮暗切换 / 设置 -->
       <div class="flex items-center gap-0.5 px-1">
         <button
@@ -40,15 +42,9 @@
       <div class="title-divider"></div>
 
       <!-- 窗口控制按钮 -->
-      <!-- 最小化 -->
       <button
         class="win-btn flex items-center justify-center"
-        :style="{
-          width: '46px',
-          height: '100%',
-          background: 'transparent',
-          color: 'var(--text-color)',
-        }"
+        :style="{ width: '46px', height: '100%', background: 'transparent', color: 'var(--text-color)' }"
         @click="minimize"
         @mouseenter="($event.currentTarget as HTMLElement).style.background = 'var(--button-bg-color)'"
         @mouseleave="($event.currentTarget as HTMLElement).style.background = 'transparent'"
@@ -58,16 +54,9 @@
           <rect x="1" y="5.5" width="10" height="1" fill="currentColor"/>
         </svg>
       </button>
-
-      <!-- 最大化/还原 -->
       <button
         class="win-btn flex items-center justify-center"
-        :style="{
-          width: '46px',
-          height: '100%',
-          background: 'transparent',
-          color: 'var(--text-color)',
-        }"
+        :style="{ width: '46px', height: '100%', background: 'transparent', color: 'var(--text-color)' }"
         @click="toggleMaximize"
         @mouseenter="($event.currentTarget as HTMLElement).style.background = 'var(--button-bg-color)'"
         @mouseleave="($event.currentTarget as HTMLElement).style.background = 'transparent'"
@@ -81,16 +70,9 @@
           <rect x="0.5" y="3" width="8" height="8" rx="0.5" fill="var(--title-bar-bg, #f5f5f5)" stroke="currentColor" stroke-width="1"/>
         </svg>
       </button>
-
-      <!-- 关闭 -->
       <button
         class="win-btn flex items-center justify-center"
-        :style="{
-          width: '46px',
-          height: '100%',
-          background: 'transparent',
-          color: 'var(--text-color)',
-        }"
+        :style="{ width: '46px', height: '100%', background: 'transparent', color: 'var(--text-color)' }"
         @click="closeWin"
         @mouseenter="($event.currentTarget as HTMLElement).style.background = '#e81123'; ($event.currentTarget as HTMLElement).style.color = '#fff'"
         @mouseleave="($event.currentTarget as HTMLElement).style.background = 'transparent'; ($event.currentTarget as HTMLElement).style.color = 'var(--text-color)'"
@@ -114,6 +96,7 @@ const appStore = useAppStore()
 const { openInNewWindow } = useSettingsWindow()
 const isMaximized = ref(false)
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+const dragRegionRef = ref<HTMLElement | null>(null)
 
 let unlisten: (() => void) | null = null
 
@@ -150,6 +133,57 @@ async function updateMaximized() {
   isMaximized.value = await getCurrentWebviewWindow().isMaximized()
 }
 
+// —— 窗口拖动（手动 API，替代 data-tauri-drag-region） ——
+function onDragMouseDown(e: MouseEvent) {
+  if (!isTauri) return
+  e.preventDefault()
+  // startDragging 通知 OS 开始窗口拖拽
+  import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
+    getCurrentWindow().startDragging()
+  })
+}
+
+// —— 顶部 resize ——
+function onResizeTopMouseDown(e: MouseEvent) {
+  if (!isTauri) return
+  e.preventDefault()
+
+  let rafId: number | null = null
+
+  import('@tauri-apps/api/window').then(async ({ getCurrentWindow, LogicalSize, LogicalPosition }) => {
+    const win = getCurrentWindow()
+    const startY = e.screenY
+    const startSize = await win.outerSize()
+    const startPos = await win.outerPosition()
+
+    // 最小窗口尺寸
+    const MIN_H = 400
+
+    function onMouseMove(ev: MouseEvent) {
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(async () => {
+        const dy = ev.screenY - startY
+        const newHeight = startSize.height - dy
+        if (newHeight < MIN_H) return
+
+        await win.setPosition(new LogicalPosition(startPos.x, startPos.y + dy))
+        await win.setSize(new LogicalSize(startSize.width, newHeight))
+      })
+    }
+
+    function onMouseUp() {
+      if (rafId) cancelAnimationFrame(rafId)
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      document.body.style.cursor = ''
+    }
+
+    document.body.style.cursor = 'ns-resize'
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  })
+}
+
 onMounted(async () => {
   if (!isTauri) return
   await updateMaximized()
@@ -157,16 +191,36 @@ onMounted(async () => {
   unlisten = await getCurrentWebviewWindow().onResized(() => {
     updateMaximized()
   })
+
+  // 绑定手动拖动监听
+  if (dragRegionRef.value) {
+    dragRegionRef.value.addEventListener('mousedown', onDragMouseDown)
+  }
 })
 
 onUnmounted(() => {
   if (unlisten) unlisten()
+  if (dragRegionRef.value) {
+    dragRegionRef.value.removeEventListener('mousedown', onDragMouseDown)
+  }
 })
 </script>
 
 <style scoped>
 .title-bar {
   flex-shrink: 0;
+  position: relative;
+}
+
+/* 顶部 6px resize 热区 */
+.resize-handle-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  cursor: ns-resize;
+  z-index: 100;
 }
 
 .win-btn {

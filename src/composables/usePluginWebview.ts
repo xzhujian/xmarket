@@ -1,6 +1,7 @@
 import { ref, onUnmounted, type Ref } from 'vue'
 import { Webview } from '@tauri-apps/api/webview'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { useDebugStore } from '@/stores/debug'
 
 export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
   const LABEL = 'plugin-content'
@@ -29,11 +30,18 @@ export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
   }
 
   async function open(url: string) {
+    const debug = useDebugStore()
+    debug.info(`[Webview] open → ${url}`)
+
     await close()
 
     const rect = getContainerRect()
-    if (!rect) return
+    if (!rect) {
+      debug.warn('[Webview] container rect is null, cannot create webview')
+      return
+    }
 
+    debug.info(`[Webview] rect: x=${rect.x} y=${rect.y} w=${rect.width} h=${rect.height}`)
     currentUrl.value = url
 
     try {
@@ -45,7 +53,9 @@ export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
         width: rect.width,
         height: rect.height,
       })
-    } catch {
+      debug.info(`[Webview] created with label="${LABEL}"`)
+    } catch (e) {
+      debug.error(`[Webview] create failed: ${e}`)
       wvInstance = null
     }
   }
@@ -73,6 +83,8 @@ export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
   }
 
   async function navigate(url: string) {
+    const debug = useDebugStore()
+    debug.info(`[Webview] navigate → ${url}`)
     await close()
     await open(url)
   }

@@ -18,7 +18,12 @@
       "icons/icon.png"
     ],
     "resources": ["../plugins", "../plugins-data"],
-    "targets": "nsis"
+    "targets": "nsis",
+    "windows": {
+      "nsis": {
+        "languages": ["SimpChinese"]
+      }
+    }
   },
   "app": {
     "withGlobalTauri": true,
