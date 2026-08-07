@@ -21,7 +21,11 @@
     "loading": "Loading...",
     "reset": "Defaults",
     "saved": "Saved",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "minimize": "Minimize",
+    "close": "Close",
+    "uninstall": "Uninstall",
+    "install": "Install Plugin"
   },
   "layout": {
     "layout1": "Compact Sidebar",
@@ -52,8 +56,20 @@
   },
   "settings": {
     "title": "Settings",
+    "general": "General",
+    "theme": "Theme",
     "language": "Language",
     "layout": "Layout",
+    "layoutTab": "Layout",
+    "sidebarStyle": "Sidebar Buttons",
+    "sidebarRow": "Row",
+    "sidebarColumn": "Column",
+    "sidebarIcon": "Icon",
+    "skin": "Skin",
+    "skinNone": "No Skin",
+    "skinUpload": "Upload Custom Skin",
+    "customSkins": "Custom Skins",
+    "custom": "Custom",
     "about": "About"
   },
   "about": {

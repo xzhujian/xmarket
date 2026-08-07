@@ -19,17 +19,18 @@ html, body {
 :root {
   --center-bg-color: #fff;
   --right-bg-color: #f1f1f1;
+  --content-bg: rgba(241,241,241,1);
   --box-shadow-color: rgba(0, 0, 0, 0.08);
   --text-color: #18181c;
   --icon-color: #000;
-  --line-color: #e3e3e3;
+  --line-color: rgba(227,227,227,0.6);
   --disabled-color: #c1c1c1;
   --accent-color: #13987f;
   --accent-hover: #0f7d6a;
   --accent-rgb: 19, 152, 127;
   --bg-active-msg: #13987f;
   --text-active-color: #fff;
-  --bg-left-menu: rgba(241,241,241,1);
+  --bg-left-menu: rgba(241,241,241,0.62);
   --bg-left-menu-hover: rgba(90,90,90,0.1);
   --bg-left-active: rgba(90,90,90,0.2);
   --bg-setting-item: #fdfdfd;
@@ -46,17 +47,18 @@ html, body {
 html[data-theme='dark'] {
   --center-bg-color: #1b1b1b;
   --right-bg-color: #161616;
+  --content-bg: rgba(22,22,22,1);
   --box-shadow-color: rgba(90,90,90,0.1);
   --text-color: #fff;
   --icon-color: #c1c1c1;
-  --line-color: #404040;
+  --line-color: rgba(64,64,64,0.6);
   --disabled-color: #575757;
   --accent-color: #13987f;
   --accent-hover: #1ab292;
   --accent-rgb: 19, 152, 127;
   --bg-active-msg: rgba(19,152,127,0.6);
   --text-active-color: #fff;
-  --bg-left-menu: rgba(22,22,22,1);
+  --bg-left-menu: rgba(22,22,22,0.62);
   --bg-left-menu-hover: #3b3b3b;
   --bg-left-active: #444;
   --bg-setting-item: #262626;
@@ -139,6 +141,7 @@ button {
 
 /* 页面内容区统一样式 */
 main {
+  background: var(--content-bg);
   &::-webkit-scrollbar {
     width: 6px;
   }

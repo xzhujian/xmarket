@@ -10,52 +10,61 @@ pub fn get_port() -> Option<u16> {
     PLUGIN_SERVER_PORT.get().copied()
 }
 
-pub fn start(plugins_dir: PathBuf) -> u16 {
-    let server = Server::http("127.0.0.1:0").expect("启动插件 HTTP 服务器失败");
+/// 启动本地 HTTP 服务器，服务多个静态根目录（插件目录、皮肤目录等）。
+pub fn start(roots: Vec<PathBuf>) -> u16 {
+    let server = Server::http("127.0.0.1:0").expect("启动本地 HTTP 服务器失败");
     let port = server.server_addr().to_ip().unwrap().port();
     PLUGIN_SERVER_PORT.set(port).ok();
 
     eprintln!("[plugin_server] 启动 on 127.0.0.1:{}", port);
-    eprintln!("[plugin_server] plugins_dir = {:?}", plugins_dir);
+    for root in &roots {
+        eprintln!("[plugin_server] root = {:?}", root);
+    }
 
     thread::spawn(move || {
         for request in server.incoming_requests() {
-            let plugins_dir = plugins_dir.clone();
-            thread::spawn(move || handle_request(request, &plugins_dir));
+            let roots = roots.clone();
+            thread::spawn(move || handle_request(request, &roots));
         }
     });
 
     port
 }
 
-fn handle_request(request: tiny_http::Request, plugins_dir: &Path) {
+fn handle_request(request: tiny_http::Request, roots: &[PathBuf]) {
     let url = request.url();
     let path = url.trim_start_matches('/');
 
     // 阻止路径穿越
     let safe_path = sanitize_path(path);
-    let full_path = plugins_dir.join(&safe_path);
 
-    // 规范化路径，防止 ../ 绕过
-    if let Ok(canonical) = full_path.canonicalize() {
-        if canonical.starts_with(plugins_dir) && canonical.is_file() {
-            serve_file(request, &canonical);
-            return;
+    // 依次在各根目录下查找静态文件
+    for root in roots {
+        let full_path = root.join(&safe_path);
+        // 规范化路径，防止 ../ 绕过
+        if let Ok(canonical) = full_path.canonicalize() {
+            if canonical.starts_with(root) && canonical.is_file() {
+                serve_file(request, &canonical);
+                return;
+            }
         }
     }
 
     // SPA fallback: 从请求路径的目录向上找 index.html
-    if let Some(canonical_dir) = full_path.parent().and_then(|p| p.canonicalize().ok()) {
-        if canonical_dir.starts_with(plugins_dir) {
-            let mut dir = canonical_dir.clone();
-            loop {
-                let index_html = dir.join("index.html");
-                if index_html.is_file() {
-                    serve_file_with_content_type(request, &index_html, "text/html; charset=utf-8");
-                    return;
-                }
-                if !dir.pop() || dir == plugins_dir || !dir.starts_with(plugins_dir) {
-                    break;
+    for root in roots {
+        let full_path = root.join(&safe_path);
+        if let Some(canonical_dir) = full_path.parent().and_then(|p| p.canonicalize().ok()) {
+            if canonical_dir.starts_with(root) {
+                let mut dir = canonical_dir.clone();
+                loop {
+                    let index_html = dir.join("index.html");
+                    if index_html.is_file() {
+                        serve_file_with_content_type(request, &index_html, "text/html; charset=utf-8");
+                        return;
+                    }
+                    if !dir.pop() || dir == *root || !dir.starts_with(root) {
+                        break;
+                    }
                 }
             }
         }

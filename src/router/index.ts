@@ -14,7 +14,7 @@ const router = createRouter({
       path: '/window',
       component: SubWindowLayout,
       children: [
-        { path: 'settings', name: 'window-settings', component: () => import('@/views/Settings.vue'), meta: { title: '设置' } },
+        { path: 'settings', name: 'window-settings', component: () => import('@/views/Settings.vue'), meta: { title: 'settings.title' } },
       ],
     },
   ],

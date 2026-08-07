@@ -1,45 +1,11 @@
 <template>
-  <div class="layout-1 flex h-full">
-    <!-- 左侧精简图标侧栏 -->
-    <div
-      class="left-bar flex flex-col items-center py-3 select-none"
-      :style="{ background: 'var(--bg-left-menu)', width: '64px', minWidth: '64px' }"
-    >
-      <!-- 系统功能 -->
-      <div class="flex flex-col items-center gap-2">
-        <button
-          v-for="item in systemItems"
-          :key="item.path"
-          class="nav-btn flex items-center justify-center w-10 h-10 rounded-xl cursor-pointer"
-          :class="{ active: currentRoute === item.path }"
-          :title="$t(item.label)"
-          @click="navigate(item.path)"
-        >
-          <SvgIcon :name="item.icon" :size="22" />
-        </button>
-      </div>
+  <div class="layout-1 flex h-screen">
+    <!-- 左侧侧栏（贯穿到窗口顶部，Logo 在标题栏内） -->
+    <AppSidebar />
 
-      <!-- 分隔线 + 已启用的插件 -->
-      <template v-if="enabledPlugins.length">
-        <div class="w-6 border-t my-3" :style="{ borderColor: 'var(--line-color)' }" />
-        <div class="flex flex-col items-center gap-2 flex-1 overflow-auto py-1">
-          <button
-            v-for="plugin in enabledPlugins"
-            :key="plugin.id"
-            class="nav-btn flex items-center justify-center w-10 h-10 rounded-xl cursor-pointer"
-            :class="{ active: currentRoute === `/plugin/${plugin.id}` }"
-            :title="plugin.name"
-            @click="navigate(`/plugin/${plugin.id}`)"
-          >
-            <SvgIcon name="package" :size="20" :style="{ color: 'var(--accent-color)' }" />
-          </button>
-        </div>
-      </template>
-
-    </div>
-
-    <!-- 右侧内容区 -->
+    <!-- 右侧：标题栏 + 内容区 -->
     <div class="flex-1 flex flex-col overflow-hidden">
+      <TitleBar />
       <main class="flex-1 overflow-auto p-4">
         <router-view />
       </main>
@@ -48,49 +14,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAppStore } from '@/stores/app'
-import { usePluginStore } from '@/stores/plugins'
-import SvgIcon from '@/components/SvgIcon.vue'
-
-const router = useRouter()
-const route = useRoute()
-const appStore = useAppStore()
-const pluginStore = usePluginStore()
-
-const currentRoute = computed(() => route.path)
-const enabledPlugins = computed(() => pluginStore.enabledPlugins)
-
-const systemItems = [
-  { path: '/', icon: 'home', label: 'nav.home' },
-  { path: '/market', icon: 'market', label: 'nav.market' },
-  { path: '/my-apps', icon: 'grid', label: 'nav.my_apps' },
-  { path: '/messages', icon: 'messages', label: 'nav.messages' },
-]
-
-function navigate(path: string) {
-  router.push(path)
-}
+import AppSidebar from '@/components/AppSidebar.vue'
+import TitleBar from '@/components/TitleBar.vue'
 </script>
 
 <style lang="scss" scoped>
 .layout-1 {
   .left-bar {
     border-right: 1px solid var(--line-color);
-  }
-
-  .nav-btn {
-    color: var(--icon-color);
-    background: transparent;
-    transition: all 0.2s;
-    &:hover {
-      background: var(--bg-left-menu-hover);
-    }
-    &.active {
-      color: var(--text-active-color);
-      background: var(--bg-active-msg);
-    }
   }
 }
 </style>

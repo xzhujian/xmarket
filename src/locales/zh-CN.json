@@ -21,7 +21,11 @@
     "loading": "加载中...",
     "reset": "恢复默认",
     "saved": "已保存",
-    "refresh": "刷新"
+    "refresh": "刷新",
+    "minimize": "最小化",
+    "close": "关闭",
+    "uninstall": "卸载",
+    "install": "安装插件"
   },
   "layout": {
     "layout1": "精简侧栏",
@@ -52,8 +56,20 @@
   },
   "settings": {
     "title": "设置",
+    "general": "通用",
+    "theme": "主题",
     "language": "语言",
     "layout": "布局方式",
+    "layoutTab": "布局",
+    "sidebarStyle": "侧边栏按钮",
+    "sidebarRow": "左右风格",
+    "sidebarColumn": "上下风格",
+    "sidebarIcon": "缩略风格",
+    "skin": "皮肤",
+    "skinNone": "无皮肤",
+    "skinUpload": "上传自定义皮肤",
+    "customSkins": "自定义皮肤",
+    "custom": "自定义",
     "about": "关于"
   },
   "about": {

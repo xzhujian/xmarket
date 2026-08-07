@@ -6,6 +6,8 @@ export interface AppConfig {
   isDark: boolean
   locale: string
   accentTheme: string
+  sidebarStyle: string
+  skin: string
 }
 
 /** 从文件读取配置 */

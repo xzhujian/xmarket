@@ -4,7 +4,7 @@
       <router-view />
     </template>
     <template v-else>
-      <TitleBar />
+      <TitleBar v-if="appStore.layoutType !== '1'" />
       <div class="flex-1 overflow-hidden">
         <component :is="currentLayout" />
       </div>
@@ -27,9 +27,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+import { useI18n } from 'vue-i18n'
 import Layout1 from '@/layouts/Layout1.vue'
 import Layout2 from '@/layouts/Layout2.vue'
 import Layout3 from '@/layouts/Layout3.vue'
@@ -50,6 +51,9 @@ const layoutMap: Record<string, any> = {
 
 const currentLayout = computed(() => layoutMap[appStore.layoutType] || Layout1)
 const isWindowRoute = computed(() => route.path.startsWith('/window'))
+
+const { locale } = useI18n()
+watch(() => appStore.locale, (val) => { locale.value = val }, { immediate: true })
 
 function toggleDebug() {
   if (route.path === '/debug') {
@@ -72,7 +76,12 @@ onMounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: var(--right-bg-color);
+  background-color: var(--right-bg-color);
+  /* 皮肤：底部铺满的背景图 + 底部可读性遮罩（无皮肤时两者均为 none） */
+  background-image: var(--skin-scrim, none), var(--skin-image, none);
+  background-size: cover, cover;
+  background-position: center bottom, center bottom;
+  background-repeat: no-repeat;
   color: var(--text-color);
   transition: background-color 0.3s, color 0.3s;
 }

@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg font-semibold" :style="{ color: 'var(--text-color)' }">{{ $t('market.my_apps') }}</h2>
       <div class="flex items-center gap-2">
-        <TButton variant="text" icon="refresh" :icon-size="18" @click="loadPlugins" :title="$t('common.refresh')" />
+        <TButton variant="text" icon="refresh" :icon-size="18" @click="onRefresh" :title="$t('common.refresh')" :class="{ spinning }" />
         <TButton variant="accent" @click="selectZipFile">
           <span class="flex items-center gap-1.5">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -12,7 +12,7 @@
               <polyline points="7 10 12 15 17 10" />
               <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            <span>安装插件</span>
+            <span>{{ $t('common.install') }}</span>
           </span>
         </TButton>
       </div>
@@ -58,7 +58,7 @@
         </div>
         <div class="flex items-center gap-2">
           <TButton variant="text" icon="download" :title="$t('market.pack')" @click="packPlugin(plugin)">
-            打包
+            {{ $t('market.pack') }}
           </TButton>
           <TButton
             :variant="plugin.enabled ? 'outline' : 'accent'"
@@ -67,7 +67,7 @@
             {{ plugin.enabled ? $t('common.disable') : $t('common.enable') }}
           </TButton>
           <TButton variant="text" style="color: #ef4444" @click="confirmUninstall(plugin)">
-            卸载
+            {{ $t('common.uninstall') }}
           </TButton>
         </div>
       </div>
@@ -104,7 +104,14 @@ const pluginStore = usePluginStore()
 const installMessage = ref('')
 const installMessageType = ref<'success' | 'error'>('success')
 const loading = ref(false)
+const spinning = ref(false)
 const uninstallTarget = ref<PluginItem | null>(null)
+
+function onRefresh() {
+  spinning.value = true
+  loadPlugins()
+  setTimeout(() => { spinning.value = false }, 600)
+}
 
 onMounted(() => {
   loadPlugins()
@@ -182,6 +189,14 @@ async function doUninstall() {
 </script>
 
 <style scoped>
+.spinning :deep(.tbtn-icon) {
+  animation: spin 0.6s ease-in-out;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .msg-success {
   background: #22c55e22;
   color: #22c55e;

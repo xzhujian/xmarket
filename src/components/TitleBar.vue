@@ -2,7 +2,7 @@
   <div
     class="title-bar flex items-center select-none"
     :style="{
-      background: appStore.isDark ? '#1b1b1b' : '#f5f5f5',
+      background: appStore.isDark ? 'rgba(27,27,27,0.62)' : 'rgba(245,245,245,0.62)',
       borderBottom: '1px solid var(--line-color)',
       height: '36px',
       paddingLeft: '12px',
@@ -14,14 +14,16 @@
 
     <!-- 左侧：应用名称/图标 + 拖动区域 -->
     <div ref="dragRegionRef" class="flex items-center gap-2 flex-1 h-full cursor-default">
-      <SvgIcon name="logo" :size="16" :style="{ color: 'var(--accent-color)' }" />
-      <span class="text-sm font-medium" :style="{ color: 'var(--text-color)' }">Framework App</span>
+      <template v-if="showLogo">
+        <SvgIcon name="logo" :size="16" :style="{ color: 'var(--accent-color)' }" />
+        <span class="text-sm font-medium" :style="{ color: 'var(--text-color)' }">Framework App</span>
+      </template>
     </div>
 
     <!-- 右侧：应用功能 + 窗口控制 -->
     <div class="flex h-full items-center">
       <!-- 亮暗切换 / 设置 -->
-      <div class="flex items-center gap-0.5 px-1">
+      <div class="flex items-center gap-1.5 px-1">
         <button
           class="tb-btn flex items-center justify-center"
           :title="appStore.isDark ? $t('theme.light') : $t('theme.dark')"
@@ -98,6 +100,12 @@ const isMaximized = ref(false)
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 const dragRegionRef = ref<HTMLElement | null>(null)
 
+withDefaults(defineProps<{
+  showLogo?: boolean
+}>(), {
+  showLogo: true,
+})
+
 let unlisten: (() => void) | null = null
 
 async function minimize() {
@@ -134,53 +142,47 @@ async function updateMaximized() {
 }
 
 // —— 窗口拖动（手动 API，替代 data-tauri-drag-region） ——
+let lastClickTime = 0
+let lastClickX = 0
+let lastClickY = 0
+
 function onDragMouseDown(e: MouseEvent) {
   if (!isTauri) return
   e.preventDefault()
-  // startDragging 通知 OS 开始窗口拖拽
+
+  const now = Date.now()
+  const isDblClick =
+    now - lastClickTime < 350 &&
+    Math.abs(e.screenX - lastClickX) < 10 &&
+    Math.abs(e.screenY - lastClickY) < 10
+
+  lastClickTime = now
+  lastClickX = e.screenX
+  lastClickY = e.screenY
+
+  if (isDblClick) {
+    toggleMaximize()
+    return
+  }
+
   import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
     getCurrentWindow().startDragging()
   })
 }
 
-// —— 顶部 resize ——
+// —— 顶部 resize（原生） ——
 function onResizeTopMouseDown(e: MouseEvent) {
   if (!isTauri) return
   e.preventDefault()
 
-  let rafId: number | null = null
-
-  import('@tauri-apps/api/window').then(async ({ getCurrentWindow, LogicalSize, LogicalPosition }) => {
-    const win = getCurrentWindow()
-    const startY = e.screenY
-    const startSize = await win.outerSize()
-    const startPos = await win.outerPosition()
-
-    // 最小窗口尺寸
-    const MIN_H = 400
-
-    function onMouseMove(ev: MouseEvent) {
-      if (rafId) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(async () => {
-        const dy = ev.screenY - startY
-        const newHeight = startSize.height - dy
-        if (newHeight < MIN_H) return
-
-        await win.setPosition(new LogicalPosition(startPos.x, startPos.y + dy))
-        await win.setSize(new LogicalSize(startSize.width, newHeight))
-      })
+  import('@tauri-apps/api/window').then(async ({ getCurrentWindow }) => {
+    try {
+      await getCurrentWindow().startResizeDragging('North')
+    } catch (err) {
+      console.error('[TitleBar] startResizeDrag failed:', err)
     }
-
-    function onMouseUp() {
-      if (rafId) cancelAnimationFrame(rafId)
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup', onMouseUp)
-      document.body.style.cursor = ''
-    }
-
-    document.body.style.cursor = 'ns-resize'
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
+  }).catch((err) => {
+    console.error('[TitleBar] import failed:', err)
   })
 }
 
@@ -238,9 +240,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
   cursor: pointer;
   border: none;
   background: transparent;
