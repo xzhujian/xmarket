@@ -1,12 +1,13 @@
 import { call, inTauri } from './ipc'
 
-// 默认皮肤（public/skins 下的图片，随应用打包）
+// 默认皮肤（public/skins/builtin 下的图片，随应用打包，只读不可删改）
+// 命名规范：skin-<NN>.png；自定义皮肤才是 resource_dir/skins 下可直接管理的 custom_* 文件
 export const DEFAULT_SKINS = [
-  { id: 'bg1', path: '/skins/bg1.png' },
-  { id: 'bg3', path: '/skins/bg3.png' },
-  { id: 'bg5', path: '/skins/bg5.png' },
-  { id: 'bg6', path: '/skins/bg6.png' },
-  { id: 'bg7', path: '/skins/bg7.png' },
+  { id: 'skin-01', path: '/skins/builtin/skin-01.png' },
+  { id: 'skin-03', path: '/skins/builtin/skin-03.png' },
+  { id: 'skin-05', path: '/skins/builtin/skin-05.png' },
+  { id: 'skin-06', path: '/skins/builtin/skin-06.png' },
+  { id: 'skin-07', path: '/skins/builtin/skin-07.png' },
 ]
 
 /**

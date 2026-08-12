@@ -2,6 +2,9 @@
   <div class="debug-page">
     <div class="max-w-lg mx-auto space-y-4">
       <h2 class="text-lg font-semibold" :style="{ color: 'var(--text-color)' }">调试面板</h2>
+      <div>
+        <button class="link-btn" @click="$router.push('/debug/window-state')">窗口状态边界检测 →</button>
+      </div>
       <Card title="环境信息">
         <div class="space-y-2 text-sm">
           <div class="flex justify-between py-1.5" :style="{ borderBottom: '1px solid var(--line-color)' }">

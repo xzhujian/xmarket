@@ -6,6 +6,7 @@ import type { AppConfig } from '@/services/config'
 export type LayoutType = '1' | '2' | '3'
 export type AccentTheme = 'teal' | 'blue' | 'purple' | 'orange' | 'rose'
 export type SidebarStyle = 'row' | 'column' | 'icon'
+export type CloseBehavior = 'ask' | 'hide' | 'close'
 
 export const useAppStore = defineStore('app', () => {
   const layoutType = ref<LayoutType>('1')
@@ -15,10 +16,12 @@ export const useAppStore = defineStore('app', () => {
   const accentTheme = ref<AccentTheme>('teal')
   const sidebarStyle = ref<SidebarStyle>('row')
   const skin = ref('')
+  const appTitle = ref('企与星河')
+  const appIcon = ref('')
+  const closeBehavior = ref<CloseBehavior>('ask')
 
-  // 异步初始化：从 Tauri 文件加载配置
+  // 异步初始化：加载配置（Tauri 读文件，浏览器读 localStorage 兜底）
   async function init() {
-    if (!isTauriEnv()) return
     try {
       const content = await readConfig()
       if (content) {
@@ -28,23 +31,43 @@ export const useAppStore = defineStore('app', () => {
         if (config.locale) locale.value = config.locale
         if (config.accentTheme) accentTheme.value = config.accentTheme as AccentTheme
         if (config.sidebarStyle) sidebarStyle.value = config.sidebarStyle as SidebarStyle
-        if (config.skin !== undefined) skin.value = config.skin
+        if (config.skin !== undefined) skin.value = migrateSkinPath(config.skin)
+        if (config.appTitle) appTitle.value = config.appTitle
+        if (config.appIcon !== undefined) appIcon.value = config.appIcon
+        if (config.closeBehavior) closeBehavior.value = config.closeBehavior as CloseBehavior
       }
     } catch {
       // 读取失败则使用默认值
     }
     applyTheme()
     applySkin()
+    applyTitle()
+    applyIcon()
 
-    // 监听其他窗口的配置变更
-    onConfigChanged((config) => {
-      if (config.layoutType) layoutType.value = config.layoutType as LayoutType
-      if (config.isDark !== undefined) isDark.value = config.isDark
-      if (config.locale) locale.value = config.locale
-      if (config.accentTheme) accentTheme.value = config.accentTheme as AccentTheme
-      if (config.sidebarStyle) sidebarStyle.value = config.sidebarStyle as SidebarStyle
-      if (config.skin !== undefined) skin.value = config.skin
-    })
+    // 监听其他窗口的配置变更（Tauri 环境）
+    if (isTauriEnv()) {
+      onConfigChanged((config) => {
+        if (config.layoutType) layoutType.value = config.layoutType as LayoutType
+        if (config.isDark !== undefined) isDark.value = config.isDark
+        if (config.locale) locale.value = config.locale
+        if (config.accentTheme) accentTheme.value = config.accentTheme as AccentTheme
+        if (config.sidebarStyle) sidebarStyle.value = config.sidebarStyle as SidebarStyle
+        if (config.skin !== undefined) skin.value = migrateSkinPath(config.skin)
+        if (config.appTitle) appTitle.value = config.appTitle
+        if (config.appIcon !== undefined) appIcon.value = config.appIcon
+        if (config.closeBehavior) closeBehavior.value = config.closeBehavior as CloseBehavior
+        applyTitle()
+        applyIcon()
+      })
+    }
+  }
+
+  // 旧版默认皮肤路径 → 新版（bgN → builtin/skin-N）
+  function migrateSkinPath(path: string): string {
+    const m = /^\/skins\/bg(\d+)\.png$/.exec(path)
+    if (!m) return path
+    const n = m[1].padStart(2, '0')
+    return `/skins/builtin/skin-${n}.png`
   }
 
   function applySkin() {
@@ -68,8 +91,33 @@ export const useAppStore = defineStore('app', () => {
       .join(' ')
   }
 
-  function persistConfig() {
+  // 标题同步：浏览器标签标题 + 主窗口任务栏标题（子窗口保留自身标题）
+  function applyTitle() {
+    document.title = appTitle.value
     if (!isTauriEnv()) return
+    if (window.location.pathname.startsWith('/window')) return
+    import('@tauri-apps/api/window')
+      .then(({ getCurrentWindow }) => getCurrentWindow().setTitle(appTitle.value))
+      .catch(() => {})
+  }
+
+  // 窗口图标同步：把默认（logo.ico）或自定义图标设为 OS 窗口图标（任务栏/标题栏）
+  async function applyIcon() {
+    if (!isTauriEnv()) return
+    if (window.location.pathname.startsWith('/window')) return
+    try {
+      const { getCurrentWindow } = await import('@tauri-apps/api/window')
+      const src = appIcon.value || '/logo.ico'
+      const res = await fetch(src)
+      const bytes = new Uint8Array(await res.arrayBuffer())
+      await getCurrentWindow().setIcon(bytes)
+    } catch (e) {
+      // 图标设置失败不影响主流程
+      console.error('[applyIcon]', e)
+    }
+  }
+
+  function persistConfig() {
     const config: AppConfig = {
       layoutType: layoutType.value,
       isDark: isDark.value,
@@ -77,18 +125,22 @@ export const useAppStore = defineStore('app', () => {
       accentTheme: accentTheme.value,
       sidebarStyle: sidebarStyle.value,
       skin: skin.value,
+      appTitle: appTitle.value,
+      appIcon: appIcon.value,
+      closeBehavior: closeBehavior.value,
     }
     writeConfig(JSON.stringify(config)).catch(() => {
       // 写入失败则静默忽略
     })
     applyTheme()
     applySkin()
+    applyTitle()
   }
 
   // 初始化时先应用主题 class（使用默认值）
   document.documentElement.classList.add(`accent-${accentTheme.value}`)
 
-  watch([layoutType, isDark, locale, accentTheme, sidebarStyle, skin], persistConfig, { deep: true })
+  watch([layoutType, isDark, locale, accentTheme, sidebarStyle, skin, appTitle, appIcon, closeBehavior], persistConfig, { deep: true })
 
   function toggleTheme() {
     isDark.value = !isDark.value
@@ -115,6 +167,20 @@ export const useAppStore = defineStore('app', () => {
     applySkin()
   }
 
+  function setAppTitle(title: string) {
+    appTitle.value = title
+    applyTitle()
+  }
+
+  function setAppIcon(filename: string) {
+    appIcon.value = filename
+    applyIcon()
+  }
+
+  function setCloseBehavior(b: CloseBehavior) {
+    closeBehavior.value = b
+  }
+
   return {
     layoutType,
     isDark,
@@ -123,6 +189,9 @@ export const useAppStore = defineStore('app', () => {
     accentTheme,
     sidebarStyle,
     skin,
+    appTitle,
+    appIcon,
+    closeBehavior,
     init,
     toggleTheme,
     setLayout,
@@ -130,5 +199,8 @@ export const useAppStore = defineStore('app', () => {
     setAccentTheme,
     setSidebarStyle,
     setSkin,
+    setAppTitle,
+    setAppIcon,
+    setCloseBehavior,
   }
 })

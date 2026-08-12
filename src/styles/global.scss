@@ -141,6 +141,7 @@ button {
 
 /* 页面内容区统一样式 */
 main {
+  position: relative;
   background: var(--content-bg);
   &::-webkit-scrollbar {
     width: 6px;

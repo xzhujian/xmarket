@@ -28,7 +28,7 @@
     "install": "Install Plugin"
   },
   "layout": {
-    "layout1": "Compact Sidebar",
+    "layout1": "Full-Height Sidebar",
     "layout2": "Standard Sidebar",
     "layout3": "Tabbed Mode",
     "system": "System",
@@ -70,18 +70,38 @@
     "skinUpload": "Upload Custom Skin",
     "customSkins": "Custom Skins",
     "custom": "Custom",
+    "appTitle": "App Title",
+    "titlePlaceholder": "Enter app title",
+    "titleDefault": "Reset to default title",
+    "appIcon": "App Icon",
+    "iconUpload": "Upload Custom Icon",
+    "iconTypeError": "Only PNG / JPG / WebP / GIF images are supported",
+    "iconDefault": "Restore Default Icon",
+    "closeBehavior": "Close behavior",
+    "closeAsk": "Always ask",
+    "closeHide": "Hide to tray",
+    "closeDirect": "Close directly",
     "about": "About"
   },
   "about": {
     "title": "About",
     "version": "Version",
     "description": "A Tauri 2 based dynamic plugin desktop client framework",
-    "author": "Author"
+    "author": "Author",
+    "license": "License",
+    "licenseTbd": "TBD"
   },
   "tray": {
     "show": "Show Window",
     "quit": "Quit",
     "about": "About"
+  },
+  "closeConfirm": {
+    "title": "Close app",
+    "message": "Hide to tray or quit?",
+    "hide": "Hide to tray",
+    "quit": "Quit",
+    "dontAsk": "Don't ask again, remember my choice"
   },
   "welcome": {
     "title": "Welcome",

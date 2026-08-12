@@ -13,7 +13,7 @@
       data-tauri-drag-region
     >
       <div class="flex items-center gap-2" data-tauri-drag-region>
-        <SvgIcon name="logo" :size="16" :style="{ color: 'var(--accent-color)' }" />
+        <BrandLogo :size="16" />
         <span class="text-sm font-medium" :style="{ color: 'var(--text-color)' }">{{ $t(titleKey) }}</span>
       </div>
 
@@ -47,7 +47,7 @@ import { useAppStore } from '@/stores/app'
 import { useI18n } from 'vue-i18n'
 import { watch } from 'vue'
 import { inTauri } from '@/services/ipc'
-import SvgIcon from '@/components/SvgIcon.vue'
+import BrandLogo from '@/components/BrandLogo.vue'
 
 const route = useRoute()
 const appStore = useAppStore()

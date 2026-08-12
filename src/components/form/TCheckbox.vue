@@ -1,7 +1,7 @@
 <template>
   <label class="tcb-wrap">
     <span class="tcb-visual" :class="{ checked: modelValue, disabled }">
-      <svg v-if="modelValue" class="tcb-check" viewBox="0 0 12 12" fill="none">
+      <svg class="tcb-check" viewBox="0 0 12 12" fill="none">
         <path d="M2 6l3 3 5-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </span>
@@ -57,8 +57,7 @@ defineEmits<{
   height: 18px;
   border: 2px solid var(--line-color);
   border-radius: 4px;
-  background: transparent;
-  transition: all 0.2s;
+  background: var(--bg-setting-item);
   flex-shrink: 0;
 }
 
@@ -71,9 +70,18 @@ defineEmits<{
   opacity: 0.5;
 }
 
+/* checkmark 常驻 DOM，仅用 opacity/transform 切换（走合成层，避免 WebView2 重排/重绘闪烁） */
 .tcb-check {
   width: 10px;
   height: 10px;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.12s ease-out, transform 0.12s ease-out;
+}
+
+.tcb-visual.checked .tcb-check {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .tcb-label {

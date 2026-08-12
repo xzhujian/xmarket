@@ -1,9 +1,6 @@
 <template>
   <div class="home-page h-full flex flex-col items-center justify-center">
     <div v-if="!hasPlugins" class="text-center">
-      <IconBox size="lg" class="mx-auto mb-5">
-        <SvgIcon name="logo" :size="40" :style="{ color: 'var(--accent-color)' }" />
-      </IconBox>
       <h2 class="text-2xl font-semibold mb-2" :style="{ color: 'var(--text-color)' }">{{ $t('welcome.title') }}</h2>
       <p class="mb-6" :style="{ color: 'var(--disabled-color)' }">{{ $t('welcome.description') }}</p>
       <TButton variant="accent" icon="market" @click="$router.push('/market')">

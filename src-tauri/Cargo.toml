@@ -13,7 +13,8 @@ crate-type = ["lib", "cdylib", "staticlib"]
 tauri-build = { version = "=2.6.3", features = [] }
 
 [dependencies]
-tauri = { version = "=2.11.5", features = ["tray-icon", "protocol-asset", "webview-data-url", "unstable"] }
+tauri = { version = "=2.11.5", features = ["tray-icon", "protocol-asset", "webview-data-url", "unstable", "image-ico", "image-png"] }
+image = { version = "0.25", features = ["jpeg", "webp", "gif"] }
 tauri-plugin-shell = "=2.3.5"
 tauri-plugin-sql = { version = "=2.4.0", features = ["sqlite"] }
 tauri-plugin-dialog = "=2.7.2"

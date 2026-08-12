@@ -28,6 +28,12 @@ if (import.meta.env.DEV) {
     component: () => import('@/views/Debug.vue'),
     meta: { title: '调试面板' },
   })
+  router.addRoute({
+    path: '/debug/window-state',
+    name: 'debug-window-state',
+    component: () => import('@/views/WindowStateDebug.vue'),
+    meta: { title: '窗口状态调试' },
+  })
 }
 
 export default router

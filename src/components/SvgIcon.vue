@@ -45,6 +45,7 @@ const iconMap: Record<string, any> = {
   grid: LucideIcons.Grid,
   refresh: LucideIcons.RefreshCw,
   star: LucideIcons.Star,
+  license: LucideIcons.ScrollText,
 }
 
 const iconComponent = computed(() => iconMap[props.name] || LucideIcons.HelpCircle)

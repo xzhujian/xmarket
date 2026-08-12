@@ -1,6 +1,9 @@
 import { call, onEvent, inTauri } from './ipc'
 import type { UnlistenFn } from '@tauri-apps/api/event'
 
+// 浏览器环境的配置存储键（localStorage 兜底，与 Tauri 的 app-config.json 同一份 JSON）
+const STORAGE_KEY = 'app-config'
+
 export interface AppConfig {
   layoutType: string
   isDark: boolean
@@ -8,15 +11,23 @@ export interface AppConfig {
   accentTheme: string
   sidebarStyle: string
   skin: string
+  appTitle: string
+  appIcon: string
+  closeBehavior: string
 }
 
-/** 从文件读取配置 */
+/** 从文件读取配置（浏览器环境用 localStorage 兜底，保证预览时也能持久化） */
 export async function readConfig(): Promise<string> {
+  if (!inTauri()) return localStorage.getItem(STORAGE_KEY) ?? ''
   return call<string>('read_config')
 }
 
-/** 写入配置到文件 */
+/** 写入配置到文件（浏览器环境写入 localStorage） */
 export async function writeConfig(content: string): Promise<void> {
+  if (!inTauri()) {
+    localStorage.setItem(STORAGE_KEY, content)
+    return
+  }
   return call('write_config', { content })
 }
 

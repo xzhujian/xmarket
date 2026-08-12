@@ -10,8 +10,8 @@
       class="logo-box flex items-center justify-center"
       :style="{ color: 'var(--accent-color)' }"
     >
-      <SvgIcon name="logo" :size="style === 'icon' ? 22 : 20" />
-      <span v-if="style === 'row'" class="logo-text" :style="{ color: 'var(--text-color)' }">Framework App</span>
+      <BrandLogo :size="style === 'icon' ? 22 : 20" />
+      <span v-if="style === 'row'" class="logo-text" :style="{ color: 'var(--text-color)' }">{{ appStore.appTitle }}</span>
     </div>
 
     <!-- 系统功能 -->
@@ -65,6 +65,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { usePluginStore } from '@/stores/plugins'
 import SvgIcon from '@/components/SvgIcon.vue'
+import BrandLogo from '@/components/BrandLogo.vue'
 
 withDefaults(defineProps<{ showLogo?: boolean }>(), { showLogo: false })
 
@@ -213,12 +214,17 @@ function navigate(path: string) {
   }
 
   .divider {
-    width: 24px;
     border-top-width: 1px;
     border-top-style: solid;
     margin: 8px auto;
     flex-shrink: 0;
   }
+  // 分隔线按导航结构自适应：
+  // 宽侧栏导航是左对齐文字区块 → 通栏横线才能真正分隔两组
+  // 窄侧栏导航是居中图标 → 居中短线段即可
+  &.sidebar-row .divider { width: auto; margin: 8px 16px; }
+  &.sidebar-column .divider { width: 24px; }
+  &.sidebar-icon .divider { width: 16px; }
 
   .nav-btn {
     color: var(--text-color);

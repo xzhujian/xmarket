@@ -28,8 +28,8 @@
     "install": "安装插件"
   },
   "layout": {
-    "layout1": "精简侧栏",
-    "layout2": "标准侧栏",
+    "layout1": "贯穿侧栏模式",
+    "layout2": "标准侧栏模式",
     "layout3": "标签页模式",
     "system": "系统功能",
     "plugins": "我的插件",
@@ -70,18 +70,38 @@
     "skinUpload": "上传自定义皮肤",
     "customSkins": "自定义皮肤",
     "custom": "自定义",
+    "appTitle": "应用标题",
+    "titlePlaceholder": "输入应用标题",
+    "titleDefault": "恢复默认标题",
+    "appIcon": "应用图标",
+    "iconUpload": "上传自定义图标",
+    "iconTypeError": "仅支持 PNG / JPG / WebP / GIF 格式的图片",
+    "iconDefault": "恢复默认图标",
+    "closeBehavior": "关闭行为",
+    "closeAsk": "每次询问",
+    "closeHide": "隐藏到托盘",
+    "closeDirect": "直接关闭",
     "about": "关于"
   },
   "about": {
     "title": "关于",
     "version": "版本",
     "description": "一个基于 Tauri 2 的动态插件化桌面客户端框架",
-    "author": "作者"
+    "author": "作者",
+    "license": "许可",
+    "licenseTbd": "待定"
   },
   "tray": {
     "show": "显示主窗口",
     "quit": "退出",
     "about": "关于"
+  },
+  "closeConfirm": {
+    "title": "关闭应用",
+    "message": "隐藏到托盘还是退出？",
+    "hide": "隐藏到托盘",
+    "quit": "退出",
+    "dontAsk": "下次不再询问，记住我的选择"
   },
   "welcome": {
     "title": "欢迎使用",

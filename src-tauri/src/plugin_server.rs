@@ -16,11 +16,6 @@ pub fn start(roots: Vec<PathBuf>) -> u16 {
     let port = server.server_addr().to_ip().unwrap().port();
     PLUGIN_SERVER_PORT.set(port).ok();
 
-    eprintln!("[plugin_server] 启动 on 127.0.0.1:{}", port);
-    for root in &roots {
-        eprintln!("[plugin_server] root = {:?}", root);
-    }
-
     thread::spawn(move || {
         for request in server.incoming_requests() {
             let roots = roots.clone();

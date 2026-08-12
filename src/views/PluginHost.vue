@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { usePluginStore } from '@/stores/plugins'
 import { usePluginWebview } from '@/composables/usePluginWebview'
@@ -69,8 +69,8 @@ watch([pluginId, plugin], async ([id, p]) => {
 
 <style scoped>
 .plugin-host {
-  width: 100%;
-  height: 100%;
-  min-height: 400px;
+  /* 绝对定位铺满父级 main,确保子 Webview 覆盖整个主内容区(无视 p-4 内边距) */
+  position: absolute;
+  inset: 0;
 }
 </style>

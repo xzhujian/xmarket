@@ -30,6 +30,58 @@
               @update:modelValue="onLocaleChange($event)"
             />
           </Card>
+
+          <!-- 关闭行为 -->
+          <Card :title="$t('settings.closeBehavior')">
+            <RadioGroup
+              :modelValue="appStore.closeBehavior"
+              :options="closeBehaviorOptions"
+              mode="dot"
+              @update:modelValue="appStore.setCloseBehavior($event as CloseBehavior)"
+            />
+          </Card>
+
+          <!-- 应用标题 -->
+          <Card :title="$t('settings.appTitle')">
+            <TInput
+              v-model="titleDraft"
+              :placeholder="$t('settings.titlePlaceholder')"
+              @keyup.enter="commitTitle"
+            />
+            <div class="action-row">
+              <button
+                v-if="appStore.appTitle !== '企与星河'"
+                class="text-btn"
+                @click="resetTitle"
+              >{{ $t('settings.titleDefault') }}</button>
+              <TButton variant="accent" @click="commitTitle">{{ $t('common.save') }}</TButton>
+            </div>
+          </Card>
+
+          <!-- 应用图标 -->
+          <Card :title="$t('settings.appIcon')">
+            <div class="icon-preview">
+              <IconBox size="lg">
+                <BrandLogo :size="36" />
+              </IconBox>
+            </div>
+            <div class="icon-actions">
+              <TButton variant="accent" icon="upload" @click="triggerIconFile">
+                {{ $t('settings.iconUpload') }}
+              </TButton>
+              <button v-if="appStore.appIcon" class="text-btn" @click="resetIcon">
+                {{ $t('settings.iconDefault') }}
+              </button>
+            </div>
+            <p v-if="iconError" class="upload-error">{{ iconError }}</p>
+            <input
+              ref="iconFileInput"
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              class="hidden"
+              @change="onIconUpload"
+            />
+          </Card>
         </div>
 
         <!-- ====== 主题标签 ====== -->
@@ -71,9 +123,6 @@
                   <img v-if="opt.path" :src="opt.path" :alt="opt.label" class="w-full h-full object-cover" />
                   <div v-else class="w-full h-full flex items-center justify-center text-xl" :style="{ color: 'var(--disabled-color)' }">∅</div>
                 </div>
-                <span class="text-xs font-medium" :style="{ color: appStore.skin === opt.path ? 'var(--text-active-color)' : 'var(--text-color)' }">
-                  {{ opt.label }}
-                </span>
               </button>
             </div>
 
@@ -95,7 +144,6 @@
                   <div class="skin-thumb w-full h-16 rounded-lg overflow-hidden" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
                     <img :src="url" alt="自定义皮肤" class="w-full h-full object-cover" />
                   </div>
-                  <span class="text-xs font-medium" :style="{ color: appStore.skin === url ? 'var(--text-active-color)' : 'var(--text-color)' }">{{ $t('settings.custom') }}</span>
                   <button
                     class="skin-delete absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs leading-none"
                     :style="{ background: 'rgba(0,0,0,0.45)', color: '#fff' }"
@@ -144,38 +192,28 @@
               >
                 <div class="layout-preview" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
                   <svg v-if="opt.value === '1'" viewBox="0 0 80 56" class="w-full h-full">
-                    <rect x="0" y="0" width="14" height="56" rx="2" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.4" />
-                    <rect x="6" y="6" width="2" height="2" rx="1" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="6" y="14" width="2" height="2" rx="1" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="6" y="22" width="2" height="2" rx="1" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="6" y="44" width="2" height="2" rx="1" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="6" y="48" width="2" height="2" rx="1" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="18" y="8" width="56" height="8" rx="1.5" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.25" />
-                    <rect x="18" y="22" width="40" height="6" rx="1" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.15" />
-                    <rect x="18" y="32" width="30" height="6" rx="1" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.15" />
+                    <!-- 窄侧栏（贯穿全高） -->
+                    <rect x="0" y="0" width="14" height="56" rx="2" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.45" />
+                    <!-- 右侧：标题栏 -->
+                    <rect x="16" y="0" width="64" height="10" rx="2" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.25" />
+                    <!-- 右侧：内容区 -->
+                    <rect x="16" y="12" width="64" height="44" rx="2" :fill="appStore.layoutType === '1' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.12" />
                   </svg>
                   <svg v-if="opt.value === '2'" viewBox="0 0 80 56" class="w-full h-full">
-                    <rect x="0" y="0" width="28" height="56" rx="2" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.4" />
-                    <rect x="6" y="8" width="16" height="2" rx="1" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--disabled-color)'" opacity="0.5" />
-                    <rect x="6" y="14" width="14" height="2" rx="1" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="6" y="20" width="14" height="2" rx="1" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="6" y="30" width="16" height="2" rx="1" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--disabled-color)'" opacity="0.5" />
-                    <rect x="6" y="36" width="14" height="2" rx="1" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="6" y="46" width="14" height="2" rx="1" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="6" y="50" width="14" height="2" rx="1" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="32" y="8" width="42" height="8" rx="1.5" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.25" />
-                    <rect x="32" y="22" width="32" height="6" rx="1" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.15" />
-                    <rect x="32" y="32" width="24" height="6" rx="1" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.15" />
+                    <!-- 顶部标题栏（通栏） -->
+                    <rect x="0" y="0" width="80" height="10" rx="2" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.25" />
+                    <!-- 左侧标准侧栏 -->
+                    <rect x="0" y="12" width="28" height="44" rx="2" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.45" />
+                    <!-- 右侧内容区 -->
+                    <rect x="30" y="12" width="50" height="44" rx="2" :fill="appStore.layoutType === '2' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.12" />
                   </svg>
                   <svg v-if="opt.value === '3'" viewBox="0 0 80 56" class="w-full h-full">
-                    <rect x="0" y="0" width="80" height="10" rx="2" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.4" />
-                    <rect x="6" y="2" width="12" height="6" rx="1.5" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--disabled-color)'" />
-                    <rect x="22" y="2" width="12" height="6" rx="1.5" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--disabled-color)'" opacity="0.5" />
-                    <rect x="38" y="2" width="12" height="6" rx="1.5" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--disabled-color)'" opacity="0.5" />
-                    <rect x="64" y="2" width="10" height="6" rx="1.5" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--disabled-color)'" opacity="0.3" />
-                    <rect x="6" y="16" width="56" height="8" rx="1.5" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.25" />
-                    <rect x="6" y="30" width="44" height="6" rx="1" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.15" />
-                    <rect x="6" y="40" width="34" height="6" rx="1" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.15" />
+                    <!-- 顶部标题栏（通栏） -->
+                    <rect x="0" y="0" width="80" height="10" rx="2" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.25" />
+                    <!-- 标签栏（通栏） -->
+                    <rect x="0" y="12" width="80" height="10" rx="2" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.45" />
+                    <!-- 内容区（通栏） -->
+                    <rect x="0" y="24" width="80" height="32" rx="2" :fill="appStore.layoutType === '3' ? 'var(--accent-color)' : 'var(--line-color)'" opacity="0.12" />
                   </svg>
                 </div>
                 <span class="text-xs font-medium" :style="{ color: appStore.layoutType === opt.value ? 'var(--text-active-color)' : 'var(--text-color)' }">
@@ -185,8 +223,8 @@
             </div>
           </Card>
 
-          <!-- 侧边栏按钮样式 -->
-          <Card :title="$t('settings.sidebarStyle')">
+          <!-- 侧边栏按钮样式（标签页模式无侧栏，隐藏） -->
+          <Card v-if="appStore.layoutType !== '3'" :title="$t('settings.sidebarStyle')">
             <RadioGroup
               :modelValue="appStore.sidebarStyle"
               :options="sidebarStyleOptions"
@@ -201,9 +239,9 @@
           <Card>
             <div class="text-center">
               <IconBox size="md" class="mx-auto mb-4">
-                <SvgIcon name="logo" :size="32" :style="{ color: 'var(--accent-color)' }" />
+                <BrandLogo :size="32" />
               </IconBox>
-              <h3 class="text-xl font-bold mb-1" :style="{ color: 'var(--text-color)' }">Framework App</h3>
+              <h3 class="text-xl font-bold mb-1" :style="{ color: 'var(--text-color)' }">{{ appStore.appTitle }}</h3>
               <p class="text-sm mb-5" :style="{ color: 'var(--disabled-color)' }">{{ $t('about.description') }}</p>
               <div class="space-y-2 text-sm text-left px-4">
                 <div class="flex justify-between py-2.5" :style="{ borderBottom: '1px solid var(--line-color)' }">
@@ -219,6 +257,13 @@
                     Tauri
                   </span>
                   <span :style="{ color: 'var(--text-color)' }">2.x</span>
+                </div>
+                <div class="flex justify-between py-2.5">
+                  <span class="flex items-center gap-2">
+                    <SvgIcon name="license" :size="16" :style="{ color: 'var(--disabled-color)' }" />
+                    {{ $t('about.license') }}
+                  </span>
+                  <span :style="{ color: 'var(--text-color)' }">{{ $t('about.licenseTbd') }}</span>
                 </div>
                 <div class="flex justify-between py-2.5">
                   <span class="flex items-center gap-2">
@@ -240,13 +285,17 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
-import type { AccentTheme, SidebarStyle } from '@/stores/app'
+import type { AccentTheme, SidebarStyle, CloseBehavior } from '@/stores/app'
 import SvgIcon from '@/components/SvgIcon.vue'
 import Card from '@/components/Card.vue'
 import IconBox from '@/components/IconBox.vue'
+import BrandLogo from '@/components/BrandLogo.vue'
 import Select from '@/components/form/TSelect.vue'
 import RadioGroup from '@/components/form/TRadioGroup.vue'
+import TInput from '@/components/form/TInput.vue'
+import TButton from '@/components/form/TButton.vue'
 import { DEFAULT_SKINS, uploadSkin, listCustomSkins, deleteCustomSkin } from '@/services/skin'
+import { uploadIcon } from '@/services/icon'
 
 const { locale, t } = useI18n()
 const appStore = useAppStore()
@@ -263,6 +312,52 @@ const tabs = [
 
 const activeTab = ref('general')
 
+// —— 通用：标题 ——
+const titleDraft = ref(appStore.appTitle)
+// 其他窗口变更配置时同步本地草稿
+watch(
+  () => appStore.appTitle,
+  (val) => { if (titleDraft.value !== val) titleDraft.value = val },
+)
+function commitTitle() {
+  appStore.setAppTitle(titleDraft.value.trim() || '企与星河')
+  titleDraft.value = appStore.appTitle
+}
+function resetTitle() {
+  appStore.setAppTitle('企与星河')
+  titleDraft.value = '企与星河'
+}
+
+// —— 通用：图标 ——
+const iconFileInput = ref<HTMLInputElement | null>(null)
+const ALLOWED_ICON_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+const iconError = ref('')
+function triggerIconFile() {
+  iconFileInput.value?.click()
+}
+async function onIconUpload(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  if (!ALLOWED_ICON_TYPES.includes(file.type)) {
+    iconError.value = t('settings.iconTypeError')
+    input.value = ''
+    return
+  }
+  iconError.value = ''
+  try {
+    const dataUrl = await uploadIcon(file)
+    appStore.setAppIcon(dataUrl)
+  } catch (err) {
+    console.error('[Settings] 图标上传失败', err)
+  } finally {
+    if (iconFileInput.value) iconFileInput.value.value = ''
+  }
+}
+function resetIcon() {
+  appStore.setAppIcon('')
+}
+
 const localeOptions = [
   { value: 'zh-CN', label: '中文' },
   { value: 'en-US', label: 'English' },
@@ -278,6 +373,12 @@ const sidebarStyleOptions = computed<{ value: SidebarStyle; label: string }[]>((
   { value: 'row', label: t('settings.sidebarRow') },
   { value: 'column', label: t('settings.sidebarColumn') },
   { value: 'icon', label: t('settings.sidebarIcon') },
+])
+
+const closeBehaviorOptions = computed<{ value: CloseBehavior; label: string }[]>(() => [
+  { value: 'ask', label: t('settings.closeAsk') },
+  { value: 'hide', label: t('settings.closeHide') },
+  { value: 'close', label: t('settings.closeDirect') },
 ])
 
 const accentColors: { key: AccentTheme; name: string; color: string }[] = [
@@ -406,5 +507,47 @@ function onLocaleChange(value: string) {
 
 .skin-delete:hover {
   background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* ===== 通用：应用标题 / 应用图标 ===== */
+.icon-preview {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.icon-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.text-btn {
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  font-size: 13px;
+  color: var(--accent-color);
+  cursor: pointer;
+}
+
+.text-btn:hover {
+  text-decoration: underline;
+}
+
+.upload-error {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #ef4444;
+  text-align: center;
 }
 </style>

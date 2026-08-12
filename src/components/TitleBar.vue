@@ -15,8 +15,8 @@
     <!-- 左侧：应用名称/图标 + 拖动区域 -->
     <div ref="dragRegionRef" class="flex items-center gap-2 flex-1 h-full cursor-default">
       <template v-if="showLogo">
-        <SvgIcon name="logo" :size="16" :style="{ color: 'var(--accent-color)' }" />
-        <span class="text-sm font-medium" :style="{ color: 'var(--text-color)' }">Framework App</span>
+        <BrandLogo :size="16" />
+        <span class="text-sm font-medium" :style="{ color: 'var(--text-color)' }">{{ appStore.appTitle }}</span>
       </template>
     </div>
 
@@ -93,6 +93,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useSettingsWindow } from '@/composables/useSettingsWindow'
 import SvgIcon from '@/components/SvgIcon.vue'
+import BrandLogo from '@/components/BrandLogo.vue'
 
 const appStore = useAppStore()
 const { openInNewWindow } = useSettingsWindow()

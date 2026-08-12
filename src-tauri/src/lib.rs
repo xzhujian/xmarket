@@ -3,6 +3,8 @@ mod plugin_server;
 
 use std::fs;
 use std::path::PathBuf;
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
 
 fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
@@ -38,6 +40,41 @@ fn write_config(app: tauri::AppHandle, content: String) -> Result<(), String> {
         app.emit("config-changed", &val).ok();
     }
     Ok(())
+}
+
+/// 退出应用（统一模态退出与托盘退出的语义）
+#[tauri::command]
+fn quit_app(app: tauri::AppHandle) {
+    app.exit(0);
+}
+
+/// 读取窗口状态(window-state.json)
+#[tauri::command]
+fn read_window_state(app: tauri::AppHandle) -> Result<String, String> {
+    let path = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("获取资源目录失败: {}", e))?
+        .join("window-state.json");
+    if path.exists() {
+        fs::read_to_string(&path).map_err(|e| format!("读取窗口状态失败: {}", e))
+    } else {
+        Ok(String::new())
+    }
+}
+
+/// 写入窗口状态(window-state.json)
+#[tauri::command]
+fn write_window_state(app: tauri::AppHandle, content: String) -> Result<(), String> {
+    let path = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("获取资源目录失败: {}", e))?
+        .join("window-state.json");
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| format!("创建目录失败: {}", e))?;
+    }
+    fs::write(&path, &content).map_err(|e| format!("写入窗口状态失败: {}", e))
 }
 
 /// 获取插件 HTTP 服务器的端口号
@@ -144,31 +181,67 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() == "main" {
+                    api.prevent_close();
+                    let _ = window.emit("close-requested", ());
+                }
+            }
+        })
         .setup(|app| {
-            // 调试：输出 resource_dir 和 plugins_dir 的实际路径
+            // 启动本地 HTTP 服务器（服务插件目录 + 皮肤目录）
             if let Ok(resource_dir) = app.path().resource_dir() {
                 let plugins_dir = resource_dir.join("plugins");
-                eprintln!("[debug] resource_dir = {:?}", resource_dir);
-                eprintln!("[debug] plugins_dir = {:?}", plugins_dir);
-                eprintln!("[debug] plugins_dir.exists() = {}", plugins_dir.exists());
-                if plugins_dir.exists() {
-                    if let Ok(entries) = std::fs::read_dir(&plugins_dir) {
-                        for entry in entries.flatten() {
-                            eprintln!("[debug]   plugin entry: {:?}", entry.path());
-                        }
-                    }
-                }
-
-                // 启动本地 HTTP 服务器（服务插件目录 + 皮肤目录）
                 let skins_dir = resource_dir.join("skins");
                 fs::create_dir_all(&skins_dir).ok();
                 plugin_server::start(vec![plugins_dir, skins_dir]);
-                let port = plugin_server::get_port().unwrap_or(0);
-                eprintln!("[debug] plugin_server port = {}", port);
             }
+
+            // 系统托盘：左键 toggle 窗口，右键弹出 打开/退出 菜单
+            let show = MenuItem::with_id(app, "tray-show", "打开", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "tray-quit", "退出", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show, &quit])?;
+            let tray = TrayIconBuilder::with_id("main-tray")
+                .icon(app.default_window_icon().cloned().expect("缺少默认窗口图标"))
+                .menu(&menu)
+                .tooltip("企与星河")
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "tray-show" => {
+                        if let Some(w) = app.get_webview_window("main") {
+                            let _ = w.show();
+                            let _ = w.set_focus();
+                        }
+                    }
+                    "tray-quit" => app.exit(0),
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    // Windows 一次左键会派发 Down+Up 两个 Click，只处理 Up 避免 toggle 两次
+                    if let TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        button_state: MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        if let Some(w) = tray.app_handle().get_webview_window("main") {
+                            if w.is_visible().unwrap_or(false) {
+                                let _ = w.hide();
+                            } else {
+                                let _ = w.show();
+                                let _ = w.set_focus();
+                            }
+                        }
+                    }
+                })
+                .build(app)?;
+            let _ = tray;
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            quit_app,
             plugin_manager::scan_plugins,
             plugin_manager::install_plugin,
             plugin_manager::pack_plugin,
@@ -176,6 +249,8 @@ pub fn run() {
             plugin_manager::uninstall_plugin,
             read_config,
             write_config,
+            read_window_state,
+            write_window_state,
             get_plugin_server_port,
             get_plugin_server_url,
             save_skin,
