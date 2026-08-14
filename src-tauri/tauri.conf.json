@@ -12,8 +12,8 @@
   "bundle": {
     "active": true,
     "icon": [
-      "icons/星河32.ico",
-      "icons/星河64.ico"
+      "icons/icon-32.ico",
+      "icons/icon-64.ico"
     ],
     "resources": ["../plugins", "../plugins-data"],
     "targets": "nsis",
@@ -34,12 +34,13 @@
         "minHeight": 600,
         "center": true,
         "resizable": true,
-        "decorations": false
+        "decorations": false,
+        "visible": false
       }
     ],
     "security": {
       "csp": "default-src * asset: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * asset: 'unsafe-inline' 'unsafe-eval'; style-src * asset: 'unsafe-inline'; img-src * asset: data: blob:; connect-src * asset:; font-src * data:; media-src *; frame-src *; worker-src *",
-      "capabilities": ["default-capability"],
+      "capabilities": ["default-capability", "settings-capability", "plugins-capability"],
       "assetProtocol": {
         "enable": true,
         "scope": ["$RESOURCE/**/*"]

@@ -69,7 +69,6 @@ pub struct PluginItem {
     pub display: String,
     pub entry_html: String,
     pub has_backend: bool,
-    pub installed: bool,
 }
 
 /// 插件状态（持久化到 JSON）
@@ -189,7 +188,6 @@ fn scan_single_plugin(_app: &AppHandle, plugin_dir: &Path, state: &HashMap<Strin
         display: manifest.display,
         entry_html: full_entry.to_string_lossy().to_string(),
         has_backend: manifest.entry.backend.is_some(),
-        installed: true,
     })
 }
 

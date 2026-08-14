@@ -96,7 +96,7 @@ import SvgIcon from '@/components/SvgIcon.vue'
 import BrandLogo from '@/components/BrandLogo.vue'
 
 const appStore = useAppStore()
-const { openInNewWindow } = useSettingsWindow()
+const { open } = useSettingsWindow()
 const isMaximized = ref(false)
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 const dragRegionRef = ref<HTMLElement | null>(null)
@@ -133,7 +133,7 @@ async function closeWin() {
 }
 
 function openSettings() {
-  openInNewWindow()
+  open()
 }
 
 async function updateMaximized() {

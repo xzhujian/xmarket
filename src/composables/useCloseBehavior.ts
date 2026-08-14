@@ -1,7 +1,7 @@
 import { ref, watch } from 'vue'
-import { onEvent, call, inTauri } from '@/services/ipc'
+import { onEvent, inTauri } from '@/services/ipc'
 import { useAppStore } from '@/stores/app'
-import { pluginWebview } from '@/services/pluginWebview'
+import { useRuntimeStore } from '@/stores/runtime'
 import { captureWindowState } from '@/services/windowState'
 
 // 关闭确认模态的共享状态（主窗口单实例）
@@ -9,10 +9,11 @@ const showCloseModal = ref(false)
 const rememberChoice = ref(false)
 let initialized = false
 
-// 模态打开时临时隐藏插件子 Webview（原生层压在 DOM 上会挡住模态），关闭时恢复
+// 模态打开时临时隐藏当前前台插件子 Webview（原生层压在 DOM 上会挡住模态），关闭时恢复
 watch(showCloseModal, (v) => {
-  if (v) pluginWebview.suspend()
-  else pluginWebview.resume()
+  const runtime = useRuntimeStore()
+  if (v) runtime.suspendActive()
+  else runtime.resumeActive()
 })
 
 async function getWindow() {
@@ -50,7 +51,7 @@ export function useCloseBehavior() {
   // 退出前记录窗口位置与大小
   async function quitApp() {
     await captureWindowState()
-    return call('quit_app')
+    return getWindow().then((win) => win.destroy())
   }
 
   // 模态按钮：隐藏到托盘（可勾选记住）

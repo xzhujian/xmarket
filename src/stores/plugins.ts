@@ -14,7 +14,6 @@ export interface PluginItem {
   display: string
   entryHtml: string
   hasBackend: boolean
-  installed: boolean
 }
 
 export const usePluginStore = defineStore('plugin', () => {

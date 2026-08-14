@@ -45,18 +45,27 @@
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useI18n } from 'vue-i18n'
-import { watch } from 'vue'
+import { watch, onMounted } from 'vue'
 import { inTauri } from '@/services/ipc'
 import BrandLogo from '@/components/BrandLogo.vue'
 
 const route = useRoute()
 const appStore = useAppStore()
 
+// 子窗口以隐藏方式创建,内容挂载后再显示,避免白屏加载一闪
+onMounted(async () => {
+  if (!inTauri()) return
+  const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow')
+  await getCurrentWebviewWindow().show().catch(() => {})
+  await getCurrentWebviewWindow().setFocus().catch(() => {})
+})
+
 const { locale } = useI18n()
 watch(() => appStore.locale, (val) => { locale.value = val }, { immediate: true })
 
 const titleKey = route.meta.title as string || ''
 
+// 关闭即销毁:下次打开重新创建,才能每次触发系统原生弹出效果
 async function closeWin() {
   if (!inTauri()) return
   const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow')

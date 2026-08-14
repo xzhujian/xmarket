@@ -1,28 +1,27 @@
 import { onMounted, onUnmounted, type Ref } from 'vue'
-import { pluginWebview } from '@/services/pluginWebview'
+import { useRuntimeStore } from '@/stores/runtime'
 
 /**
- * 组件内访问子 Webview 的薄壳:绑定容器并透出 manager 方法。
- * 真正的实例与状态都在 services/pluginWebview 单例里;
+ * 组件内访问插件窗口的薄壳:绑定容器 + 透出 runtime store 的窗口管理方法。
+ * 插件窗口管理（状态 + 物理执行）统一在 runtime store,这里只做容器绑定与透传;
  * 组件卸载只解绑容器(不销毁 webview),实现"页面缓存"。
  */
 export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
-  const manager = pluginWebview
+  const runtime = useRuntimeStore()
 
   onMounted(() => {
-    manager.bindContainer(containerRef.value)
+    runtime.bindContainer(containerRef.value)
   })
   onUnmounted(() => {
-    manager.bindContainer(null)
+    runtime.bindContainer(null)
   })
 
   return {
-    open: (url: string) => manager.open(url),
-    navigate: (url: string) => manager.open(url),
-    close: () => manager.close(),
-    hide: () => manager.hide(),
-    show: () => manager.show(),
-    suspend: () => manager.suspend(),
-    resume: () => manager.resume(),
+    open: (key: string, url: string) => runtime.openWindow(key, url),
+    navigate: (key: string, url: string) => runtime.openWindow(key, url),
+    close: (key: string) => runtime.closeWindow(key),
+    hideActive: () => runtime.hideActive(),
+    suspend: () => runtime.suspendActive(),
+    resume: () => runtime.resumeActive(),
   }
 }

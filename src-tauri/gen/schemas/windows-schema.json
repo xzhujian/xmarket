@@ -387,6 +387,234 @@
       "description": "Permission identifier",
       "oneOf": [
         {
+          "description": "Enables the delete_skin command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-delete-skin",
+          "markdownDescription": "Enables the delete_skin command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_plugin_server_port command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-plugin-server-port",
+          "markdownDescription": "Enables the get_plugin_server_port command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_plugin_server_url command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-plugin-server-url",
+          "markdownDescription": "Enables the get_plugin_server_url command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the install_plugin command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-install-plugin",
+          "markdownDescription": "Enables the install_plugin command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the list_skins command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-list-skins",
+          "markdownDescription": "Enables the list_skins command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the pack_plugin command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-pack-plugin",
+          "markdownDescription": "Enables the pack_plugin command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the plugin_exit command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-plugin-exit",
+          "markdownDescription": "Enables the plugin_exit command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the plugin_invoke command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-plugin-invoke",
+          "markdownDescription": "Enables the plugin_invoke command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the plugin_runtime_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-plugin-runtime-list",
+          "markdownDescription": "Enables the plugin_runtime_list command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the plugin_runtime_start command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-plugin-runtime-start",
+          "markdownDescription": "Enables the plugin_runtime_start command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the plugin_runtime_stop command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-plugin-runtime-stop",
+          "markdownDescription": "Enables the plugin_runtime_stop command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the read_config command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-read-config",
+          "markdownDescription": "Enables the read_config command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the read_window_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-read-window-state",
+          "markdownDescription": "Enables the read_window_state command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the save_skin command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-save-skin",
+          "markdownDescription": "Enables the save_skin command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the scan_plugins command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-scan-plugins",
+          "markdownDescription": "Enables the scan_plugins command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the toggle_plugin command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-toggle-plugin",
+          "markdownDescription": "Enables the toggle_plugin command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the uninstall_plugin command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-uninstall-plugin",
+          "markdownDescription": "Enables the uninstall_plugin command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the write_config command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-write-config",
+          "markdownDescription": "Enables the write_config command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the write_window_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-write-window-state",
+          "markdownDescription": "Enables the write_window_state command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the delete_skin command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-delete-skin",
+          "markdownDescription": "Denies the delete_skin command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_plugin_server_port command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-plugin-server-port",
+          "markdownDescription": "Denies the get_plugin_server_port command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_plugin_server_url command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-plugin-server-url",
+          "markdownDescription": "Denies the get_plugin_server_url command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the install_plugin command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-install-plugin",
+          "markdownDescription": "Denies the install_plugin command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the list_skins command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-list-skins",
+          "markdownDescription": "Denies the list_skins command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the pack_plugin command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-pack-plugin",
+          "markdownDescription": "Denies the pack_plugin command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the plugin_exit command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-plugin-exit",
+          "markdownDescription": "Denies the plugin_exit command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the plugin_invoke command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-plugin-invoke",
+          "markdownDescription": "Denies the plugin_invoke command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the plugin_runtime_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-plugin-runtime-list",
+          "markdownDescription": "Denies the plugin_runtime_list command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the plugin_runtime_start command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-plugin-runtime-start",
+          "markdownDescription": "Denies the plugin_runtime_start command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the plugin_runtime_stop command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-plugin-runtime-stop",
+          "markdownDescription": "Denies the plugin_runtime_stop command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the read_config command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-read-config",
+          "markdownDescription": "Denies the read_config command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the read_window_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-read-window-state",
+          "markdownDescription": "Denies the read_window_state command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the save_skin command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-save-skin",
+          "markdownDescription": "Denies the save_skin command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the scan_plugins command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-scan-plugins",
+          "markdownDescription": "Denies the scan_plugins command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the toggle_plugin command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-toggle-plugin",
+          "markdownDescription": "Denies the toggle_plugin command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the uninstall_plugin command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-uninstall-plugin",
+          "markdownDescription": "Denies the uninstall_plugin command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the write_config command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-write-config",
+          "markdownDescription": "Denies the write_config command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the write_window_state command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-write-window-state",
+          "markdownDescription": "Denies the write_window_state command without any pre-configured scope."
+        },
+        {
           "description": "Default core plugins set.\n#### This default permission set includes:\n\n- `core:path:default`\n- `core:event:default`\n- `core:window:default`\n- `core:webview:default`\n- `core:app:default`\n- `core:image:default`\n- `core:resources:default`\n- `core:menu:default`\n- `core:tray:default`",
           "type": "string",
           "const": "core:default",

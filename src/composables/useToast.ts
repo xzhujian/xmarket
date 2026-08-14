@@ -15,13 +15,6 @@ const timers = new Map<number, ReturnType<typeof setTimeout>>()
 
 const DEFAULT_DURATION = 3000
 
-const iconMap: Record<ToastType, string> = {
-  success: 'check',
-  error: 'close',
-  warning: 'alert',
-  info: 'about',
-}
-
 const colorMap: Record<ToastType, string> = {
   success: '#22c55e',
   error: '#ef4444',
@@ -75,5 +68,5 @@ export function useToast() {
   function warning(message: string) { add('warning', message) }
   function info(message: string) { add('info', message) }
 
-  return { toasts, add, remove, pause, resume, success, error, warning, info, iconMap, colorMap }
+  return { toasts, add, remove, pause, resume, success, error, warning, info, colorMap }
 }

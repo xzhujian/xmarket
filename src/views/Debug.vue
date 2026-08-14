@@ -5,6 +5,20 @@
       <div>
         <button class="link-btn" @click="$router.push('/debug/window-state')">窗口状态边界检测 →</button>
       </div>
+
+      <!-- 插件窗口管理（前端 store） -->
+      <Card title="插件窗口管理（前端 store）">
+        <div class="space-y-3 text-sm">
+          <div :style="{ color: 'var(--text-color)' }">当前前台: {{ runtime.activeId ?? '无' }}</div>
+          <div :style="{ color: 'var(--text-color)' }">已打开窗口: {{ Object.keys(runtime.windows).length }}</div>
+          <div
+            v-for="(win, id) in runtime.windows"
+            :key="id"
+            class="p-2 rounded text-xs font-mono break-all whitespace-pre-wrap"
+            :style="{ background: appStore.isDark ? '#111' : '#f5f5f5', color: 'var(--text-color)' }"
+          >{{ id }} → {{ win.label }} [{{ win.kind }}:{{ win.viewState }}]\n{{ win.url }}</div>
+        </div>
+      </Card>
       <Card title="环境信息">
         <div class="space-y-2 text-sm">
           <div class="flex justify-between py-1.5" :style="{ borderBottom: '1px solid var(--line-color)' }">
@@ -218,6 +232,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useDebugStore } from '@/stores/debug'
+import { useRuntimeStore } from '@/stores/runtime'
 import { useToast } from '@/composables/useToast'
 import type { LogLevel } from '@/stores/debug'
 import SvgIcon from '@/components/SvgIcon.vue'
@@ -239,6 +254,7 @@ import TRating from '@/components/form/TRating.vue'
 const route = useRoute()
 const appStore = useAppStore()
 const debugStore = useDebugStore()
+const runtime = useRuntimeStore()
 
 const isDev = import.meta.env.DEV
 const windowWidth = ref(window.innerWidth)

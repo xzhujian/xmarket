@@ -111,18 +111,22 @@ export function computeRestoreBounds(
 /** 启动时恢复窗口位置与大小;超出所有屏幕则主屏居中 + 尺寸钳制到主屏 */
 export async function restoreWindowState(): Promise<void> {
   if (!inTauri()) return
+  const win = getCurrentWindow()
   const saved = await readWindowState()
-  if (!saved) return
-  try {
-    const monitors = await availableMonitors()
-    const pm = (await primaryMonitor()) ?? null
-    const { x, y, width, height } = computeRestoreBounds(saved, monitors, pm)
-    const win = getCurrentWindow()
-    await win.setPosition(new PhysicalPosition(x, y))
-    await win.setSize(new PhysicalSize(width, height))
-    // 若之前最大化,先设回正常尺寸再最大化,取消最大化即回到正常尺寸,不会卡在满屏
-    if (saved.maximized) {
-      await win.maximize()
-    }
-  } catch { /* 恢复失败则用默认窗口状态 */ }
+  if (saved) {
+    try {
+      const monitors = await availableMonitors()
+      const pm = (await primaryMonitor()) ?? null
+      const { x, y, width, height } = computeRestoreBounds(saved, monitors, pm)
+      await win.setPosition(new PhysicalPosition(x, y))
+      await win.setSize(new PhysicalSize(width, height))
+      // 若之前最大化,先设回正常尺寸再最大化,取消最大化即回到正常尺寸,不会卡在满屏
+      if (saved.maximized) {
+        await win.maximize()
+      }
+    } catch { /* 恢复失败则用默认窗口状态 */ }
+  }
+  // 主窗口以隐藏方式创建(避免"初始尺寸→恢复尺寸"闪动),恢复到位后再显示并聚焦到前台
+  await win.show().catch(() => {})
+  await win.setFocus().catch(() => {})
 }

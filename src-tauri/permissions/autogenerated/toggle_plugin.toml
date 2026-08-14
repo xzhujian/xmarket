@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-toggle-plugin"
+description = "Enables the toggle_plugin command without any pre-configured scope."
+commands.allow = ["toggle_plugin"]
+
+[[permission]]
+identifier = "deny-toggle-plugin"
+description = "Denies the toggle_plugin command without any pre-configured scope."
+commands.deny = ["toggle_plugin"]

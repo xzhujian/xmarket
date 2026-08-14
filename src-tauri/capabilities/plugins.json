@@ -1,0 +1,26 @@
+{
+  "identifier": "plugins-capability",
+  "description": "Permissions for plugin child webviews (remote origin)",
+  "webviews": ["plugin-page-*"],
+  "remote": { "urls": ["http://127.0.0.1:*"] },
+  "permissions": [
+    "core:default",
+    "core:event:default",
+    "allow-scan-plugins",
+    "allow-install-plugin",
+    "allow-pack-plugin",
+    "allow-toggle-plugin",
+    "allow-uninstall-plugin",
+    "allow-plugin-invoke",
+    "allow-plugin-exit",
+    "allow-get-plugin-server-port",
+    "allow-get-plugin-server-url",
+    "allow-read-config",
+    "allow-write-config",
+    "allow-read-window-state",
+    "allow-write-window-state",
+    "allow-save-skin",
+    "allow-list-skins",
+    "allow-delete-skin"
+  ]
+}

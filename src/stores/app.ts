@@ -12,7 +12,6 @@ export const useAppStore = defineStore('app', () => {
   const layoutType = ref<LayoutType>('1')
   const isDark = ref(false)
   const locale = ref('zh-CN')
-  const sidebarCollapsed = ref(false)
   const accentTheme = ref<AccentTheme>('teal')
   const sidebarStyle = ref<SidebarStyle>('row')
   const skin = ref('')
@@ -21,20 +20,24 @@ export const useAppStore = defineStore('app', () => {
   const closeBehavior = ref<CloseBehavior>('ask')
 
   // 异步初始化：加载配置（Tauri 读文件，浏览器读 localStorage 兜底）
+  // 将一份 AppConfig 数据映射到响应式 state（启动加载与多窗口实时同步共用）
+  function applyConfig(config: AppConfig) {
+    if (config.layoutType) layoutType.value = config.layoutType as LayoutType
+    if (config.isDark !== undefined) isDark.value = config.isDark
+    if (config.locale) locale.value = config.locale
+    if (config.accentTheme) accentTheme.value = config.accentTheme as AccentTheme
+    if (config.sidebarStyle) sidebarStyle.value = config.sidebarStyle as SidebarStyle
+    if (config.skin !== undefined) skin.value = migrateSkinPath(config.skin)
+    if (config.appTitle) appTitle.value = config.appTitle
+    if (config.appIcon !== undefined) appIcon.value = config.appIcon
+    if (config.closeBehavior) closeBehavior.value = config.closeBehavior as CloseBehavior
+  }
+
   async function init() {
     try {
       const content = await readConfig()
       if (content) {
-        const config: AppConfig = JSON.parse(content)
-        if (config.layoutType) layoutType.value = config.layoutType as LayoutType
-        if (config.isDark !== undefined) isDark.value = config.isDark
-        if (config.locale) locale.value = config.locale
-        if (config.accentTheme) accentTheme.value = config.accentTheme as AccentTheme
-        if (config.sidebarStyle) sidebarStyle.value = config.sidebarStyle as SidebarStyle
-        if (config.skin !== undefined) skin.value = migrateSkinPath(config.skin)
-        if (config.appTitle) appTitle.value = config.appTitle
-        if (config.appIcon !== undefined) appIcon.value = config.appIcon
-        if (config.closeBehavior) closeBehavior.value = config.closeBehavior as CloseBehavior
+        applyConfig(JSON.parse(content))
       }
     } catch {
       // 读取失败则使用默认值
@@ -47,15 +50,7 @@ export const useAppStore = defineStore('app', () => {
     // 监听其他窗口的配置变更（Tauri 环境）
     if (isTauriEnv()) {
       onConfigChanged((config) => {
-        if (config.layoutType) layoutType.value = config.layoutType as LayoutType
-        if (config.isDark !== undefined) isDark.value = config.isDark
-        if (config.locale) locale.value = config.locale
-        if (config.accentTheme) accentTheme.value = config.accentTheme as AccentTheme
-        if (config.sidebarStyle) sidebarStyle.value = config.sidebarStyle as SidebarStyle
-        if (config.skin !== undefined) skin.value = migrateSkinPath(config.skin)
-        if (config.appTitle) appTitle.value = config.appTitle
-        if (config.appIcon !== undefined) appIcon.value = config.appIcon
-        if (config.closeBehavior) closeBehavior.value = config.closeBehavior as CloseBehavior
+        applyConfig(config)
         applyTitle()
         applyIcon()
       })
@@ -185,7 +180,6 @@ export const useAppStore = defineStore('app', () => {
     layoutType,
     isDark,
     locale,
-    sidebarCollapsed,
     accentTheme,
     sidebarStyle,
     skin,

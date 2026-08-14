@@ -1,7 +1,7 @@
 {
   "identifier": "default-capability",
   "description": "Default capability for the main window",
-  "windows": ["main", "settings"],
+  "webviews": ["main"],
   "permissions": [
     "core:default",
     "core:window:default",
@@ -15,6 +15,7 @@
     "core:webview:allow-webview-close",
     "core:webview:allow-create-webview-window",
     "core:window:allow-start-dragging",
+    "core:window:allow-set-focus",
     "core:window:allow-minimize",
     "core:window:allow-maximize",
     "core:window:allow-unmaximize",
@@ -24,9 +25,11 @@
     "core:window:allow-set-title",
     "core:window:allow-set-icon",
     "core:window:allow-hide",
+    "core:window:allow-show",
     "core:window:allow-destroy",
     "core:window:allow-set-size",
     "core:window:allow-set-position",
+    "core:window:allow-center",
     "core:window:allow-outer-position",
     "core:window:allow-outer-size",
     "core:window:allow-available-monitors",
@@ -38,6 +41,22 @@
     "dialog:allow-save",
     "sql:default",
     "sql:allow-execute",
-    "sql:allow-select"
+    "sql:allow-select",
+    "allow-scan-plugins",
+    "allow-install-plugin",
+    "allow-pack-plugin",
+    "allow-toggle-plugin",
+    "allow-uninstall-plugin",
+    "allow-plugin-invoke",
+    "allow-plugin-exit",
+    "allow-get-plugin-server-port",
+    "allow-get-plugin-server-url",
+    "allow-read-config",
+    "allow-write-config",
+    "allow-read-window-state",
+    "allow-write-window-state",
+    "allow-save-skin",
+    "allow-list-skins",
+    "allow-delete-skin"
   ]
 }

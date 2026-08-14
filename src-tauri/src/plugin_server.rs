@@ -2,6 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::thread;
+use tauri::{AppHandle, Manager};
 use tiny_http::{Header, Response, Server};
 
 static PLUGIN_SERVER_PORT: OnceLock<u16> = OnceLock::new();
@@ -123,4 +124,29 @@ fn mime_type(path: &Path) -> &'static str {
         "map" => "application/json",
         _ => "application/octet-stream",
     }
+}
+
+// ─── 服务器命令 ───────────────────────────────────────────────
+
+/// 获取插件 HTTP 服务器的端口号
+#[tauri::command]
+pub fn get_plugin_server_port() -> Result<u16, String> {
+    get_port().ok_or_else(|| "插件服务器未启动".to_string())
+}
+
+/// 将插件入口 HTML 路径转为 HTTP 服务器 URL
+#[tauri::command]
+pub fn get_plugin_server_url(app: AppHandle, entry_html: String) -> Result<String, String> {
+    let port = get_port().ok_or_else(|| "插件服务器未启动".to_string())?;
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("获取资源目录失败: {}", e))?;
+    let plugins_dir = resource_dir.join("plugins");
+    let entry_path = PathBuf::from(&entry_html);
+    let relative = entry_path
+        .strip_prefix(&plugins_dir)
+        .map_err(|_| format!("插件路径不在插件目录下: {}", entry_html))?;
+    let relative_str = relative.to_string_lossy().replace('\\', "/");
+    Ok(format!("http://127.0.0.1:{}/{}", port, relative_str))
 }

@@ -1,7 +1,7 @@
 <template>
   <div
     class="app-sidebar flex flex-col select-none overflow-hidden"
-    :class="`sidebar-${style}`"
+    :class="[`sidebar-${style}`, { 'with-logo': showLogo }]"
     :style="{ background: 'var(--bg-left-menu)' }"
   >
     <!-- Logo（可选：布局1显示在侧栏顶部） -->
@@ -10,7 +10,7 @@
       class="logo-box flex items-center justify-center"
       :style="{ color: 'var(--accent-color)' }"
     >
-      <BrandLogo :size="style === 'icon' ? 22 : 20" />
+      <BrandLogo :size="logoSize" />
       <span v-if="style === 'row'" class="logo-text" :style="{ color: 'var(--text-color)' }">{{ appStore.appTitle }}</span>
     </div>
 
@@ -76,6 +76,12 @@ const pluginStore = usePluginStore()
 
 const style = computed(() => appStore.sidebarStyle)
 const iconSize = computed(() => (style.value === 'icon' ? 22 : 20))
+// 上下风格（窄侧栏、图标在上）logo 居中显示，放大更协调
+const logoSize = computed(() => {
+  if (style.value === 'column') return 28
+  if (style.value === 'icon') return 22
+  return 20
+})
 const currentRoute = computed(() => route.path)
 const enabledPlugins = computed(() => pluginStore.enabledPlugins)
 
@@ -238,6 +244,11 @@ function navigate(path: string) {
       color: var(--text-active-color);
       background: var(--bg-active-msg);
     }
+  }
+
+  // 贯通侧栏（布局1）：Logo 在侧栏顶部，去掉顶部留白，与右侧标题栏贴齐
+  &.with-logo {
+    padding-top: 0;
   }
 }
 </style>
