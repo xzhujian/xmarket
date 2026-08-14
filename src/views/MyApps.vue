@@ -18,21 +18,14 @@
       </div>
     </div>
 
-    <!-- 安装状态提示 -->
-    <div v-if="installMessage" class="mb-3 px-4 py-2 rounded-lg text-sm" :class="installMessageType === 'success' ? 'msg-success' : 'msg-error'">
-      {{ installMessage }}
-    </div>
-
     <!-- 空状态 -->
     <EmptyState v-if="!pluginStore.plugins.length && !loading" icon="package" :text="$t('market.no_my_plugins')" />
 
-    <!-- 加载中 -->
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <span class="text-sm" :style="{ color: 'var(--disabled-color)' }">正在扫描插件...</span>
-    </div>
+    <!-- 加载中：列表隐藏，Loading 占位；数据到达后再渲染列表 -->
+    <Loading v-if="loading" text="正在扫描插件..." />
 
     <!-- 插件列表 -->
-    <div v-if="pluginStore.plugins.length" class="space-y-3">
+    <div v-if="!loading && pluginStore.plugins.length" class="space-y-3">
       <div
         v-for="plugin in sortedPlugins"
         :key="plugin.id"
@@ -98,14 +91,15 @@ import { open, save } from '@tauri-apps/plugin-dialog'
 import SvgIcon from '@/components/SvgIcon.vue'
 import IconBox from '@/components/IconBox.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import Loading from '@/components/Loading.vue'
 import TButton from '@/components/form/TButton.vue'
+import { useToast } from '@/composables/useToast'
 
 const pluginStore = usePluginStore()
-const installMessage = ref('')
-const installMessageType = ref<'success' | 'error'>('success')
 const loading = ref(false)
 const spinning = ref(false)
 const uninstallTarget = ref<PluginItem | null>(null)
+const { success, error } = useToast()
 
 function onRefresh() {
   spinning.value = true
@@ -138,17 +132,11 @@ async function selectZipFile() {
     })
     if (!selected) return
 
-    installMessage.value = '正在安装...'
-    installMessageType.value = 'success'
-
     await pluginStore.installPlugin(selected as string)
 
-    installMessage.value = '插件安装成功 ✓'
-    installMessageType.value = 'success'
-    setTimeout(() => { installMessage.value = '' }, 3000)
+    success('插件安装成功')
   } catch (err: any) {
-    installMessage.value = `安装失败: ${err?.message || err}`
-    installMessageType.value = 'error'
+    error(`安装失败: ${err?.message || err}`)
   }
 }
 
@@ -178,12 +166,9 @@ async function doUninstall() {
 
   try {
     await pluginStore.uninstallPlugin(plugin.id)
-    installMessage.value = `插件「${plugin.name}」已卸载`
-    installMessageType.value = 'success'
-    setTimeout(() => { installMessage.value = '' }, 3000)
+    success(`插件「${plugin.name}」已卸载`)
   } catch (err: any) {
-    installMessage.value = `卸载失败: ${err?.message || err}`
-    installMessageType.value = 'error'
+    error(`卸载失败: ${err?.message || err}`)
   }
 }
 </script>
@@ -197,15 +182,4 @@ async function doUninstall() {
   to { transform: rotate(360deg); }
 }
 
-.msg-success {
-  background: #22c55e22;
-  color: #22c55e;
-  border: 1px solid #22c55e44;
-}
-
-.msg-error {
-  background: #ef444422;
-  color: #ef4444;
-  border: 1px solid #ef444444;
-}
 </style>

@@ -6,6 +6,7 @@ fn main() {
                 "install_plugin",
                 "pack_plugin",
                 "toggle_plugin",
+                "set_plugin_sort",
                 "uninstall_plugin",
                 "plugin_invoke",
                 "plugin_exit",

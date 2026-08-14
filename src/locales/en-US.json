@@ -2,8 +2,8 @@
   "nav": {
     "home": "Home",
     "theme": "Theme",
-    "market": "App Market",
-    "my_apps": "My Apps",
+    "market": "Plugin Market",
+    "my_apps": "My Plugins",
     "messages": "Messages",
     "settings": "Settings",
     "about": "About"
@@ -36,10 +36,10 @@
     "no_plugins": "No enabled plugins"
   },
   "market": {
-    "all_apps": "All Apps",
-    "my_apps": "My Apps",
+    "all_apps": "All Plugins",
+    "my_apps": "My Plugins",
     "pack": "Pack",
-    "no_plugins": "No plugins yet. Explore the App Market!",
+    "no_plugins": "No plugins yet. Explore the Plugin Market!",
     "no_my_plugins": "You haven't installed any plugins yet"
   },
   "message": {
@@ -105,6 +105,6 @@
   },
   "welcome": {
     "title": "Welcome",
-    "description": "Go to App Market to install plugins and get started"
+    "description": "Go to Plugin Market to install plugins and get started"
   }
 }

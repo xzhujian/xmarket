@@ -12,10 +12,12 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .on_window_event(system::on_window_event)
         .setup(|app| {
+            // 初始化数据库（后端自持连接池，插件状态存于此）
+            plugin_manager::init_db(app.handle())?;
+
             // 启动本地 HTTP 服务器（服务插件目录 + 皮肤目录）
             if let Ok(resource_dir) = app.path().resource_dir() {
                 let plugins_dir = resource_dir.join("plugins");
@@ -35,6 +37,7 @@ pub fn run() {
             plugin_manager::install_plugin,
             plugin_manager::pack_plugin,
             plugin_manager::toggle_plugin,
+            plugin_manager::set_plugin_sort,
             plugin_manager::uninstall_plugin,
             plugin_permission::plugin_invoke,
             plugin_runtime::plugin_exit,

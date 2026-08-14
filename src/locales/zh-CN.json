@@ -2,8 +2,8 @@
   "nav": {
     "home": "首页",
     "theme": "换肤",
-    "market": "应用市场",
-    "my_apps": "我的应用",
+    "market": "插件市场",
+    "my_apps": "我的插件",
     "messages": "消息",
     "settings": "设置",
     "about": "关于"
@@ -36,10 +36,10 @@
     "no_plugins": "暂无启用的插件"
   },
   "market": {
-    "all_apps": "全部应用",
-    "my_apps": "我的应用",
+    "all_apps": "全部插件",
+    "my_apps": "我的插件",
     "pack": "打包",
-    "no_plugins": "暂无插件，欢迎探索应用市场",
+    "no_plugins": "暂无插件，欢迎探索插件市场",
     "no_my_plugins": "你还没有安装任何插件"
   },
   "message": {
@@ -105,6 +105,6 @@
   },
   "welcome": {
     "title": "欢迎使用",
-    "description": "请前往应用市场安装插件开始使用"
+    "description": "请前往插件市场安装插件开始使用"
   }
 }

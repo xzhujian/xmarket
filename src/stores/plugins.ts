@@ -85,6 +85,9 @@ export const usePluginStore = defineStore('plugin', () => {
   function setSortOrder(id: string, order: number) {
     const plugin = plugins.value.find(p => p.id === id)
     if (plugin) plugin.sortOrder = order
+    invoke('set_plugin_sort', { id, sortOrder: order }).catch(err => {
+      console.error('保存排序失败:', err)
+    })
   }
 
   const enabledPlugins = computed(() =>

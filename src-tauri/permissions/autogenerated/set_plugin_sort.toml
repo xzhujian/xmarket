@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-plugin-sort"
+description = "Enables the set_plugin_sort command without any pre-configured scope."
+commands.allow = ["set_plugin_sort"]
+
+[[permission]]
+identifier = "deny-set-plugin-sort"
+description = "Denies the set_plugin_sort command without any pre-configured scope."
+commands.deny = ["set_plugin_sort"]

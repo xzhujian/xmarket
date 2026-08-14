@@ -15,7 +15,7 @@
       "icons/icon-32.ico",
       "icons/icon-64.ico"
     ],
-    "resources": ["../plugins", "../plugins-data"],
+    "resources": ["../plugins", "../plugins-data", "../db"],
     "targets": "nsis",
     "windows": {
       "nsis": {
@@ -45,13 +45,6 @@
         "enable": true,
         "scope": ["$RESOURCE/**/*"]
       }
-    }
-  },
-  "plugins": {
-    "sql": {
-      "preload": [
-        "sqlite:framework.db"
-      ]
     }
   }
 }

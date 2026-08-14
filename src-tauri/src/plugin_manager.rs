@@ -1,4 +1,6 @@
 use serde::{Deserialize, Serialize};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::SqlitePool;
 use std::collections::HashMap;
 use std::fs;
 use std::io::{Read, Write};
@@ -93,10 +95,27 @@ impl Default for PluginState {
     }
 }
 
-/// 插件状态文件结构
-#[derive(Debug, Serialize, Deserialize, Clone)]
-struct PluginStateFile {
-    plugins: HashMap<String, PluginState>,
+/// 插件状态表的行结构（用于 sqlx 查询）
+#[derive(Debug, sqlx::FromRow)]
+struct PluginStateRow {
+    plugin_id: String,
+    enabled: bool,
+    show_on_home: bool,
+    is_default_page: bool,
+    sort_order: i32,
+    display_mode: String,
+}
+
+impl From<PluginStateRow> for PluginState {
+    fn from(r: PluginStateRow) -> Self {
+        Self {
+            enabled: r.enabled,
+            show_on_home: r.show_on_home,
+            is_default_page: r.is_default_page,
+            sort_order: r.sort_order,
+            display_mode: r.display_mode,
+        }
+    }
 }
 
 // ─── 路径辅助 ─────────────────────────────────────────────────
@@ -129,34 +148,115 @@ fn get_plugins_data_dir(app: &AppHandle) -> PathBuf {
     dir
 }
 
-/// 获取状态文件路径
-fn get_state_path(app: &AppHandle) -> PathBuf {
-    let data_dir = get_plugins_data_dir(app);
-    data_dir.join("plugin-state.json")
+// ─── 数据库（插件静态状态存于 SQLite，连接池由后端自持）─────
+
+/// 托管给 Tauri 的 sqlite 连接池，后端命令通过它读写数据库
+pub struct Db(pub SqlitePool);
+
+/// 数据库文件路径：resource_dir/db/framework.db
+fn db_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let resource_dir = app
+        .path()
+        .resource_dir()
+        .map_err(|e| format!("获取资源目录失败: {}", e))?;
+    let dir = resource_dir.join("db");
+    fs::create_dir_all(&dir).map_err(|e| format!("创建数据库目录失败: {}", e))?;
+    Ok(dir.join("framework.db"))
 }
 
-// ─── 状态文件读写 ─────────────────────────────────────────────
-
-fn read_state(app: &AppHandle) -> HashMap<String, PluginState> {
-    let path = get_state_path(app);
-    if path.exists() {
-        fs::read_to_string(&path)
-            .ok()
-            .and_then(|s| serde_json::from_str::<PluginStateFile>(&s).ok())
-            .map(|f| f.plugins)
-            .unwrap_or_default()
-    } else {
-        HashMap::new()
-    }
+/// 应用启动时初始化数据库：建目录、连池、建表，然后托管给 Tauri。
+/// 此后后端命令通过 `app.state::<Db>()` 获取连接池，前端不再直接连库。
+pub fn init_db(app: &AppHandle) -> Result<(), String> {
+    // 直接用文件路径建连接，绕开 `sqlite:C:\...` 被 url 解析为查询参数的问题
+    let options = SqliteConnectOptions::new()
+        .filename(db_path(app)?)
+        .create_if_missing(true);
+    let pool = tauri::async_runtime::block_on(SqlitePoolOptions::new().connect_with(options))
+        .map_err(|e| format!("连接数据库失败: {}", e))?;
+    tauri::async_runtime::block_on(
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS plugin_states (
+                plugin_id       TEXT PRIMARY KEY,
+                enabled         INTEGER NOT NULL DEFAULT 1,
+                show_on_home    INTEGER NOT NULL DEFAULT 0,
+                is_default_page INTEGER NOT NULL DEFAULT 0,
+                sort_order      INTEGER NOT NULL DEFAULT 0,
+                display_mode    TEXT NOT NULL DEFAULT 'default'
+            )",
+        )
+        .execute(&pool),
+    )
+    .map_err(|e| format!("创建插件状态表失败: {}", e))?;
+    app.manage(Db(pool));
+    Ok(())
 }
 
-fn write_state(app: &AppHandle, plugins: HashMap<String, PluginState>) {
-    let path = get_state_path(app);
-    let file = PluginStateFile { plugins };
-    if let Ok(json) = serde_json::to_string_pretty(&file) {
-        fs::create_dir_all(path.parent().unwrap()).ok();
-        fs::write(&path, &json).ok();
-    }
+/// 获取后端自持的 sqlite 连接池
+fn get_pool(app: &AppHandle) -> SqlitePool {
+    app.state::<Db>().0.clone()
+}
+
+/// 读取某插件状态（不存在则返回默认）
+async fn get_state(pool: &SqlitePool, id: &str) -> Result<PluginState, String> {
+    let row = sqlx::query_as::<_, PluginStateRow>(
+        "SELECT plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode
+         FROM plugin_states WHERE plugin_id = ?",
+    )
+    .bind(id)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("读取插件状态失败: {}", e))?;
+    Ok(row.map(PluginState::from).unwrap_or_default())
+}
+
+/// 读取全部插件状态
+async fn load_all_states(pool: &SqlitePool) -> Result<HashMap<String, PluginState>, String> {
+    let rows = sqlx::query_as::<_, PluginStateRow>(
+        "SELECT plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode
+         FROM plugin_states",
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("读取插件状态失败: {}", e))?;
+    Ok(rows
+        .into_iter()
+        .map(|r| (r.plugin_id.clone(), r.into()))
+        .collect())
+}
+
+/// 新增或更新某插件状态（upsert）
+async fn upsert_state(pool: &SqlitePool, id: &str, state: &PluginState) -> Result<(), String> {
+    sqlx::query(
+        "INSERT INTO plugin_states
+           (plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode)
+         VALUES (?, ?, ?, ?, ?, ?)
+         ON CONFLICT(plugin_id) DO UPDATE SET
+           enabled = excluded.enabled,
+           show_on_home = excluded.show_on_home,
+           is_default_page = excluded.is_default_page,
+           sort_order = excluded.sort_order,
+           display_mode = excluded.display_mode",
+    )
+    .bind(id)
+    .bind(state.enabled)
+    .bind(state.show_on_home)
+    .bind(state.is_default_page)
+    .bind(state.sort_order)
+    .bind(&state.display_mode)
+    .execute(pool)
+    .await
+    .map_err(|e| format!("写入插件状态失败: {}", e))?;
+    Ok(())
+}
+
+/// 删除某插件状态
+async fn delete_state(pool: &SqlitePool, id: &str) -> Result<(), String> {
+    sqlx::query("DELETE FROM plugin_states WHERE plugin_id = ?")
+        .bind(id)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("删除插件状态失败: {}", e))?;
+    Ok(())
 }
 
 // ─── 扫描单个插件 ─────────────────────────────────────────────
@@ -195,9 +295,9 @@ fn scan_single_plugin(_app: &AppHandle, plugin_dir: &Path, state: &HashMap<Strin
 
 /// 扫描所有插件
 #[tauri::command]
-pub fn scan_plugins(app: AppHandle) -> Result<Vec<PluginItem>, String> {
+pub async fn scan_plugins(app: AppHandle) -> Result<Vec<PluginItem>, String> {
     let plugins_dir = get_plugins_dir(&app);
-    let state = read_state(&app);
+    let state = load_all_states(&get_pool(&app)).await?;
 
     let mut items = Vec::new();
 
@@ -224,7 +324,7 @@ pub fn scan_plugins(app: AppHandle) -> Result<Vec<PluginItem>, String> {
 
 /// 安装插件（解压 zip）
 #[tauri::command]
-pub fn install_plugin(app: AppHandle, zip_path: String) -> Result<PluginItem, String> {
+pub async fn install_plugin(app: AppHandle, zip_path: String) -> Result<PluginItem, String> {
     let zip_path = PathBuf::from(&zip_path);
     if !zip_path.exists() {
         return Err("ZIP 文件不存在".to_string());
@@ -327,19 +427,20 @@ pub fn install_plugin(app: AppHandle, zip_path: String) -> Result<PluginItem, St
         }
     }
 
-    // 更新状态
-    let mut state = read_state(&app);
-    state.insert(
-        plugin_id.clone(),
-        PluginState {
+    // 更新状态（新增，默认启用）
+    let pool = get_pool(&app);
+    upsert_state(
+        &pool,
+        &plugin_id,
+        &PluginState {
             enabled: true,
             ..Default::default()
         },
-    );
-    write_state(&app, state);
+    )
+    .await?;
 
     // 重新扫描返回
-    let state = read_state(&app);
+    let state = load_all_states(&pool).await?;
     scan_single_plugin(&app, &target_dir, &state)
         .ok_or_else(|| "安装后扫描插件失败".to_string())
 }
@@ -415,7 +516,7 @@ fn add_dir_to_zip(
 
 /// 卸载插件
 #[tauri::command]
-pub fn uninstall_plugin(app: AppHandle, plugin_id: String) -> Result<(), String> {
+pub async fn uninstall_plugin(app: AppHandle, plugin_id: String) -> Result<(), String> {
     let plugins_dir = get_plugins_dir(&app);
     let plugin_dir = plugins_dir.join(&plugin_id);
 
@@ -434,20 +535,27 @@ pub fn uninstall_plugin(app: AppHandle, plugin_id: String) -> Result<(), String>
         fs::remove_dir_all(&plugin_data_dir).ok();
     }
 
-    // 从状态中移除
-    let mut state = read_state(&app);
-    state.remove(&plugin_id);
-    write_state(&app, state);
+    // 从状态表中移除
+    let pool = get_pool(&app);
+    delete_state(&pool, &plugin_id).await?;
 
     Ok(())
 }
 
 /// 切换插件启禁状态
 #[tauri::command]
-pub fn toggle_plugin(app: AppHandle, id: String, enabled: bool) -> Result<(), String> {
-    let mut state = read_state(&app);
-    let entry = state.entry(id).or_insert_with(PluginState::default);
-    entry.enabled = enabled;
-    write_state(&app, state);
-    Ok(())
+pub async fn toggle_plugin(app: AppHandle, id: String, enabled: bool) -> Result<(), String> {
+    let pool = get_pool(&app);
+    let mut state = get_state(&pool, &id).await?;
+    state.enabled = enabled;
+    upsert_state(&pool, &id, &state).await
+}
+
+/// 保存插件排序
+#[tauri::command]
+pub async fn set_plugin_sort(app: AppHandle, id: String, sort_order: i32) -> Result<(), String> {
+    let pool = get_pool(&app);
+    let mut state = get_state(&pool, &id).await?;
+    state.sort_order = sort_order;
+    upsert_state(&pool, &id, &state).await
 }

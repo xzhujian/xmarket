@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="toast-container" :class="position">
+    <div v-if="!pluginOpen" class="toast-container" :class="position">
       <TransitionGroup name="toast">
         <div
           v-for="t in toasts"
@@ -39,6 +39,8 @@
 <script setup lang="ts">
 import SvgIcon from '@/components/SvgIcon.vue'
 import { useToast } from '@/composables/useToast'
+import { useRuntimeStore } from '@/stores/runtime'
+import { computed } from 'vue'
 
 withDefaults(defineProps<{
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left'
@@ -47,6 +49,11 @@ withDefaults(defineProps<{
 })
 
 const { toasts, remove, pause, resume, colorMap } = useToast()
+
+// 当前台是插件页面时（activeId 非空），插件内嵌 webview 会盖住主窗口的 toast，
+// 因此抑制提示，等离开插件页面再恢复。
+const runtime = useRuntimeStore()
+const pluginOpen = computed(() => !!runtime.activeId)
 </script>
 
 <style scoped>
@@ -61,12 +68,12 @@ const { toasts, remove, pause, resume, colorMap } = useToast()
 }
 
 .toast-container.top-right {
-  top: 16px;
+  top: 48px;
   right: 16px;
 }
 
 .toast-container.top-left {
-  top: 16px;
+  top: 48px;
   left: 16px;
 }
 
