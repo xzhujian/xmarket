@@ -15,11 +15,18 @@
       "icons/icon-32.ico",
       "icons/icon-64.ico"
     ],
-    "resources": ["../plugins", "../plugins-data", "../db"],
+    "resources": [
+      "../plugins",
+      "../plugins-data",
+      "../db"
+    ],
     "targets": "nsis",
     "windows": {
       "nsis": {
-        "languages": ["SimpChinese"]
+        "template": "nsis/installer.nsi",
+        "languages": [
+          "SimpChinese"
+        ]
       }
     }
   },
@@ -40,10 +47,16 @@
     ],
     "security": {
       "csp": "default-src * asset: data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * asset: 'unsafe-inline' 'unsafe-eval'; style-src * asset: 'unsafe-inline'; img-src * asset: data: blob:; connect-src * asset:; font-src * data:; media-src *; frame-src *; worker-src *",
-      "capabilities": ["default-capability", "settings-capability", "plugins-capability"],
+      "capabilities": [
+        "default-capability",
+        "settings-capability",
+        "plugins-capability"
+      ],
       "assetProtocol": {
         "enable": true,
-        "scope": ["$RESOURCE/**/*"]
+        "scope": [
+          "$RESOURCE/**/*"
+        ]
       }
     }
   }

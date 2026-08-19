@@ -1,0 +1,19 @@
+{
+  "active": "LuatWorkSpace",
+  "brands": {
+    "合宙工作台": {
+      "productName": "合宙工作台",
+      "icon": [
+        "icons/iot_icon32.ico",
+        "icons/iot_icon96.ico"
+      ]
+    },
+    "LuatWorkSpace": {
+      "productName": "LuatWorkSpace",
+      "icon": [
+        "icons/iot_icon32.ico",
+        "icons/iot_icon96.ico"
+      ]
+    }
+  }
+}

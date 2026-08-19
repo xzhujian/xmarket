@@ -45,9 +45,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+import { usePluginStore } from '@/stores/plugins'
 import { useI18n } from 'vue-i18n'
 import Layout1 from '@/layouts/Layout1.vue'
 import Layout2 from '@/layouts/Layout2.vue'
@@ -59,6 +60,7 @@ import TCheckbox from '@/components/form/TCheckbox.vue'
 import TButton from '@/components/form/TButton.vue'
 import { useCloseBehavior } from '@/composables/useCloseBehavior'
 import { restoreWindowState } from '@/services/windowState'
+import { installMainContextMenuGuard } from '@/utils/contextMenu'
 
 const { showCloseModal, rememberChoice, initCloseBehavior, cancelClose, closeToTray, closeToQuit } = useCloseBehavior()
 
@@ -66,6 +68,7 @@ const isDev = import.meta.env.DEV
 const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
+const pluginStore = usePluginStore()
 
 const layoutMap: Record<string, any> = {
   '1': Layout1,
@@ -89,12 +92,34 @@ function toggleDebug() {
 
 onMounted(async () => {
   appStore.init()
+  // 屏蔽主窗口 WebView2 默认右键菜单（不影响应用自定义菜单）
+  installMainContextMenuGuard()
+  // 屏蔽 F5 / Ctrl+R / Ctrl+F5 刷新：刷新会重载主窗口 JS 上下文，把插件 webview 的
+  // 运行态（pages/currentKey 是模块级变量，刷新即清零）全部丢掉，导致已存在的子
+  // webview 与新创建的 label 冲突，插件页就打不开了。
+  window.addEventListener('keydown', blockRefresh, true)
+  // 应用启动即加载插件列表，首页/侧边栏一进来就有数据（MyApps 里的懒加载保留做刷新兜底）
+  pluginStore.loadPlugins()
   document.documentElement.setAttribute('data-blur', '1')
   initCloseBehavior()
   // 主窗口启动时恢复上次的位置与大小(子窗口 /window 跳过)
   if (!isWindowRoute.value) {
     await restoreWindowState()
   }
+})
+
+function blockRefresh(e: KeyboardEvent) {
+  if (
+    e.key === 'F5' ||
+    ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R'))
+  ) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+}
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', blockRefresh, true)
 })
 </script>
 

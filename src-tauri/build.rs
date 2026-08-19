@@ -4,6 +4,7 @@ fn main() {
             tauri_build::AppManifest::new().commands(&[
                 "scan_plugins",
                 "install_plugin",
+                "save_market_zip",
                 "pack_plugin",
                 "toggle_plugin",
                 "set_plugin_sort",
@@ -12,6 +13,8 @@ fn main() {
                 "plugin_exit",
                 "get_plugin_server_port",
                 "get_plugin_server_url",
+                "get_plugin_icon_url",
+                "create_plugin_webview",
                 "read_config",
                 "write_config",
                 "read_window_state",
@@ -19,6 +22,10 @@ fn main() {
                 "save_skin",
                 "list_skins",
                 "delete_skin",
+                "save_icon",
+                "get_app_icon",
+                "delete_icon",
+                "get_app_defaults",
             ]),
         ),
     )

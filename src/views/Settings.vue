@@ -40,7 +40,10 @@
               @update:modelValue="appStore.setCloseBehavior($event as CloseBehavior)"
             />
           </Card>
+        </div>
 
+        <!-- ====== 高级标签 ====== -->
+        <div v-if="activeTab === 'advanced'" class="space-y-5">
           <!-- 应用标题 -->
           <Card :title="$t('settings.appTitle')">
             <TInput
@@ -50,7 +53,7 @@
             />
             <div class="action-row">
               <button
-                v-if="appStore.appTitle !== '企与星河'"
+                v-if="appStore.appTitle !== appStore.defaultTitle"
                 class="text-btn"
                 @click="resetTitle"
               >{{ $t('settings.titleDefault') }}</button>
@@ -82,6 +85,46 @@
               @change="onIconUpload"
             />
           </Card>
+        </div>
+
+        <!-- ====== 市场标签 ====== -->
+        <div v-if="activeTab === 'market'" class="space-y-5">
+          <Card :title="$t('settings.market')">
+            <p class="market-tip">{{ $t('settings.marketTip') }}</p>
+
+            <div v-if="appStore.markets.length" class="market-list">
+              <div v-for="(m, i) in appStore.markets" :key="i" class="market-row">
+                <div class="market-info">
+                  <span class="market-name">{{ m.name }}</span>
+                  <span class="market-url">{{ m.url }}</span>
+                </div>
+                <button
+                  class="market-del"
+                  :title="$t('common.delete')"
+                  @click="removeMarket(i)"
+                >
+                  <SvgIcon name="close" :size="15" />
+                </button>
+              </div>
+            </div>
+
+            <button class="market-add-btn" @click="openAddMarket">
+              <SvgIcon name="plus" :size="16" />
+              {{ $t('settings.marketAdd') }}
+            </button>
+          </Card>
+
+          <!-- 添加市场弹窗：填完即添加并提交，无保存按钮 -->
+          <TModal v-model="showAddMarket" :title="$t('settings.marketAdd')" size="sm">
+            <div class="add-market-form">
+              <TInput v-model="addName" :placeholder="$t('settings.marketName')" />
+              <TInput v-model="addUrl" :placeholder="$t('settings.marketUrlPlaceholder')" @keyup.enter="confirmAddMarket" />
+            </div>
+            <template #footer>
+              <TButton variant="outline" @click="showAddMarket = false">{{ $t('common.cancel') }}</TButton>
+              <TButton variant="accent" @click="confirmAddMarket">{{ $t('settings.marketAdd') }}</TButton>
+            </template>
+          </TModal>
         </div>
 
         <!-- ====== 主题标签 ====== -->
@@ -119,7 +162,7 @@
                 }"
                 @click="appStore.setSkin(opt.path)"
               >
-                <div class="skin-thumb w-full h-16 rounded-lg overflow-hidden" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
+                <div class="skin-thumb w-full h-16 rounded-lg" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
                   <img v-if="opt.path" :src="opt.path" :alt="opt.label" class="w-full h-full object-cover" />
                   <div v-else class="w-full h-full flex items-center justify-center text-xl" :style="{ color: 'var(--disabled-color)' }">∅</div>
                 </div>
@@ -141,7 +184,7 @@
                   }"
                   @click="appStore.setSkin(url)"
                 >
-                  <div class="skin-thumb w-full h-16 rounded-lg overflow-hidden" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
+                  <div class="skin-thumb w-full h-16 rounded-lg" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
                     <img :src="url" alt="自定义皮肤" class="w-full h-full object-cover" />
                   </div>
                   <button
@@ -294,8 +337,9 @@ import Select from '@/components/form/TSelect.vue'
 import RadioGroup from '@/components/form/TRadioGroup.vue'
 import TInput from '@/components/form/TInput.vue'
 import TButton from '@/components/form/TButton.vue'
+import TModal from '@/components/form/TModal.vue'
 import { DEFAULT_SKINS, uploadSkin, listCustomSkins, deleteCustomSkin } from '@/services/skin'
-import { uploadIcon } from '@/services/icon'
+import { uploadIcon, deleteIcon } from '@/services/icon'
 
 const { locale, t } = useI18n()
 const appStore = useAppStore()
@@ -305,8 +349,10 @@ watch(() => appStore.locale, (val) => { locale.value = val }, { immediate: true 
 
 const tabs = [
   { key: 'general', icon: 'settings', label: 'settings.general' },
+  { key: 'market', icon: 'market', label: 'settings.market' },
   { key: 'theme', icon: 'theme', label: 'settings.theme' },
   { key: 'layout', icon: 'layout', label: 'settings.layoutTab' },
+  { key: 'advanced', icon: 'wrench', label: 'settings.advanced' },
   { key: 'about', icon: 'about', label: 'about.title' },
 ]
 
@@ -320,12 +366,36 @@ watch(
   (val) => { if (titleDraft.value !== val) titleDraft.value = val },
 )
 function commitTitle() {
-  appStore.setAppTitle(titleDraft.value.trim() || '企与星河')
+  appStore.setAppTitle(titleDraft.value.trim() || appStore.defaultTitle)
   titleDraft.value = appStore.appTitle
 }
 function resetTitle() {
-  appStore.setAppTitle('企与星河')
-  titleDraft.value = '企与星河'
+  appStore.setAppTitle(appStore.defaultTitle)
+  titleDraft.value = appStore.defaultTitle
+}
+
+// —— 市场：列表只读展示 + 删除；「添加市场」弹窗填完即添加提交，无保存按钮 ——
+const showAddMarket = ref(false)
+const addName = ref('')
+const addUrl = ref('')
+function openAddMarket() {
+  addName.value = ''
+  addUrl.value = ''
+  showAddMarket.value = true
+}
+function normalizeMarketUrl(url: string) {
+  if (!url) return url
+  return /^https?:\/\//i.test(url) ? url : `http://${url}`
+}
+function confirmAddMarket() {
+  const name = addName.value.trim()
+  const url = normalizeMarketUrl(addUrl.value.trim())
+  if (!name || !url) return
+  appStore.setMarkets([...appStore.markets, { name, url }])
+  showAddMarket.value = false
+}
+function removeMarket(i: number) {
+  appStore.setMarkets(appStore.markets.filter((_, idx) => idx !== i))
 }
 
 // —— 通用：图标 ——
@@ -346,15 +416,16 @@ async function onIconUpload(e: Event) {
   }
   iconError.value = ''
   try {
-    const dataUrl = await uploadIcon(file)
-    appStore.setAppIcon(dataUrl)
+    const key = await uploadIcon(file)
+    appStore.setAppIcon(key)
   } catch (err) {
     console.error('[Settings] 图标上传失败', err)
   } finally {
     if (iconFileInput.value) iconFileInput.value.value = ''
   }
 }
-function resetIcon() {
+async function resetIcon() {
+  await deleteIcon(appStore.appIcon)
   appStore.setAppIcon('')
 }
 
@@ -493,7 +564,7 @@ function onLocaleChange(value: string) {
   width: 100%;
   height: 64px;
   border-radius: 8px;
-  overflow: hidden;
+  overflow: clip;
 }
 
 .layout-preview svg {
@@ -501,12 +572,111 @@ function onLocaleChange(value: string) {
 }
 
 /* 缩略图不拦截滚轮事件，保证悬停图片时容器仍可滚动 */
+.skin-thumb {
+  /* 用 clip 而非 hidden：hidden 会创建滚动容器吞掉滚轮事件，clip 只裁切不拦滚动 */
+  overflow: clip;
+}
 .skin-thumb img {
   pointer-events: none;
 }
 
 .skin-delete:hover {
   background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* ===== 市场配置 ===== */
+.market-tip {
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--disabled-color);
+  line-height: 1.6;
+}
+
+.market-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.market-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line-color);
+  border-radius: 10px;
+  background: var(--bg-setting-item, transparent);
+}
+
+.market-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.market-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.market-url {
+  font-size: 12px;
+  color: var(--disabled-color);
+  /* clip 而非 hidden：hidden 会进滚动链吞掉滚轮，clip 只裁切不拦滚动，省略号仍生效 */
+  overflow: clip;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 添加市场：实底主色按钮，白字始终可见，字号适中 */
+.market-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px 0;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent-color);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.market-add-btn:hover {
+  filter: brightness(1.08);
+}
+
+.add-market-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.market-del {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--disabled-color);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.market-del:hover {
+  color: #fff;
+  background: var(--danger-color, #ef4444);
 }
 
 /* ===== 通用：应用标题 / 应用图标 ===== */

@@ -47,8 +47,38 @@
             :title="style === 'icon' ? plugin.name : undefined"
             @click="navigate(`/plugin/${plugin.id}`)"
           >
-            <SvgIcon name="package" :size="iconSize" :style="{ color: 'var(--accent-color)' }" />
+            <span
+              class="plugin-icon-wrap"
+              :style="{ width: iconSize + 'px', height: iconSize + 'px' }"
+            >
+              <img
+                v-if="plugin.iconUrl"
+                :src="plugin.iconUrl"
+                :alt="plugin.name"
+                class="plugin-ic"
+                :style="{ width: iconSize + 'px', height: iconSize + 'px' }"
+              />
+              <SvgIcon v-else name="package" :size="iconSize" class="plugin-icon" />
+              <!-- 缩略/上下风格：运行状态用图标右下角徽章圆点（叠加不占布局，避免按钮开关时高度跳动） -->
+              <span v-if="isRunning(plugin.id) && style !== 'row'" class="run-badge" title="运行中"></span>
+            </span>
+            <!-- 缩略/上下风格：悬停时按钮背景框右上角小 ✕ 关闭角标；主图标仍可点击返回插件 -->
+            <span
+              v-if="isRunning(plugin.id) && style !== 'row'"
+              class="plugin-close-badge"
+              title="关闭插件"
+              @click.stop="closePlugin(plugin.id)"
+            >
+              ✕
+            </span>
             <span v-if="style !== 'icon'" class="nav-label">{{ plugin.name }}</span>
+            <span v-if="isRunning(plugin.id) && style === 'row'" class="run-dot" title="运行中"></span>
+            <span
+              v-if="isRunning(plugin.id) && style === 'row'"
+              class="plugin-close"
+              title="关闭插件"
+              @click.stop="closePlugin(plugin.id)"
+            >✕</span>
           </button>
         </div>
       </div>
@@ -64,6 +94,7 @@ import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { usePluginStore } from '@/stores/plugins'
+import { useRuntimeStore } from '@/stores/runtime'
 import SvgIcon from '@/components/SvgIcon.vue'
 import BrandLogo from '@/components/BrandLogo.vue'
 
@@ -73,6 +104,15 @@ const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
 const pluginStore = usePluginStore()
+const runtime = useRuntimeStore()
+
+const isRunning = (id: string) => !!runtime.windows[id]
+
+// 关闭运行中的插件：销毁 webview；若正处其页面则回到首页
+function closePlugin(id: string) {
+  runtime.closeWindow(id)
+  if (route.path === `/plugin/${id}`) router.push('/')
+}
 
 const style = computed(() => appStore.sidebarStyle)
 const iconSize = computed(() => (style.value === 'icon' ? 22 : 20))
@@ -92,8 +132,7 @@ const sectionTitleColor = computed(() =>
 
 const systemItems = [
   { path: '/', icon: 'home', label: 'nav.home' },
-  { path: '/market', icon: 'market', label: 'nav.market' },
-  { path: '/my-apps', icon: 'grid', label: 'nav.my_apps' },
+  { path: '/plugins', icon: 'layout', label: 'nav.plugins' },
   { path: '/messages', icon: 'messages', label: 'nav.messages' },
 ]
 
@@ -233,6 +272,7 @@ function navigate(path: string) {
   &.sidebar-icon .divider { width: 16px; }
 
   .nav-btn {
+    position: relative;
     color: var(--text-color);
     background: transparent;
     cursor: pointer;
@@ -244,6 +284,93 @@ function navigate(path: string) {
       color: var(--text-active-color);
       background: var(--bg-active-msg);
     }
+  }
+
+  .plugin-icon {
+    color: var(--accent-color);
+  }
+  .nav-btn.active .plugin-icon {
+    color: var(--text-active-color);
+  }
+
+  .plugin-ic {
+    border-radius: 4px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .plugin-icon-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  // 缩略/上下风格共用：运行状态徽章——图标右下角小圆点（带侧栏底色描边，形成角标感）。
+  // 叠加在图标上，不占布局空间，保证按钮开关状态高度一致。
+  .run-badge {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    border: 2px solid var(--bg-left-menu);
+    box-sizing: content-box;
+  }
+  // 缩略/上下风格共用：悬停时按钮背景框右上角小 ✕ 关闭角标（默认隐藏）。
+  // 用半透明黑底 + 白 ✕，不用主题色/写死的红，避免与主题选中态撞色；
+  // 黑白加透明在深浅主题下都通用。
+  // 点击关闭（@click.stop 阻止跳转），主图标区域照常可点击返回插件。
+  .plugin-close-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  }
+  .nav-btn:hover .plugin-close-badge {
+    display: inline-flex;
+  }
+
+  .run-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    flex-shrink: 0;
+  }
+  .plugin-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--disabled-color);
+    flex-shrink: 0;
+    &:hover {
+      background: var(--bg-hover-muted);
+      color: var(--text-color);
+    }
+  }
+  &.sidebar-row .plugin-close {
+    margin-left: auto;
   }
 
   // 贯通侧栏（布局1）：Logo 在侧栏顶部，去掉顶部留白，与右侧标题栏贴齐

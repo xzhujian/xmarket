@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-icon"
+description = "Enables the save_icon command without any pre-configured scope."
+commands.allow = ["save_icon"]
+
+[[permission]]
+identifier = "deny-save-icon"
+description = "Denies the save_icon command without any pre-configured scope."
+commands.deny = ["save_icon"]

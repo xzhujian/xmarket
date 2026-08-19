@@ -6,10 +6,10 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'home', component: Home, meta: { title: 'nav.home' } },
-    { path: '/market', name: 'market', component: () => import('@/views/Market.vue'), meta: { title: 'nav.market' } },
-    { path: '/my-apps', name: 'my-apps', component: () => import('@/views/MyApps.vue'), meta: { title: 'nav.my_apps' } },
+    { path: '/plugins', name: 'plugins', component: () => import('@/views/Plugins.vue'), meta: { title: 'nav.plugins' } },
     { path: '/messages', name: 'messages', component: () => import('@/views/Messages.vue'), meta: { title: 'nav.messages' } },
     { path: '/plugin/:id', name: 'plugin', component: () => import('@/views/PluginHost.vue'), meta: { title: '插件' } },
+    { path: '/market/:id', name: 'market-detail', component: () => import('@/views/MarketDetail.vue'), meta: { title: 'market.detail_title' } },
     {
       path: '/window',
       component: SubWindowLayout,

@@ -28,7 +28,9 @@ const plugin = computed(() =>
 const pluginUrl = ref('')
 let unlistenExit: (() => void) | null = null
 
-async function resolvePluginUrl(entryHtml: string): Promise<string> {
+async function resolvePluginUrl(entryHtml: string, entryUrl: string | null): Promise<string> {
+  // 网络型插件：直接使用远程入口 URL
+  if (entryUrl) return entryUrl
   try {
     const url = await invoke<string>('get_plugin_server_url', { entryHtml })
     debug.info(`[PluginHost] server URL → ${url}`)
@@ -46,10 +48,10 @@ onMounted(async () => {
 
   await nextTick()
 
-  if (plugin.value?.entryHtml) {
-    pluginUrl.value = await resolvePluginUrl(plugin.value.entryHtml)
+  if (plugin.value && (plugin.value.entryUrl || plugin.value.entryHtml)) {
+    pluginUrl.value = await resolvePluginUrl(plugin.value.entryHtml, plugin.value.entryUrl ?? null)
     if (pluginUrl.value) {
-      await pluginView.open(pluginId.value, pluginUrl.value)
+      await pluginView.open(pluginId.value, pluginUrl.value, plugin.value.keepAlive ?? false)
     }
   }
 
@@ -57,7 +59,7 @@ onMounted(async () => {
   onEvent<string>('plugin-exit', (pid) => {
     debug.info(`[PluginHost] 插件请求退出: ${pid}`)
     pluginView.close(pid)
-    router.push('/my-apps')
+    router.push('/plugins')
   }).then((fn) => { unlistenExit = fn }).catch(() => {})
 })
 
@@ -65,17 +67,22 @@ onUnmounted(() => {
   unlistenExit?.()
 })
 
-// 离开页面时隐藏当前前台子 WebView（不关闭，后续切换回来直接显示）
+// 离开插件页面时关闭当前前台子 WebView：
+// 常驻(keepAlive)插件只隐藏保留运行，非常驻插件彻底关闭（下次进入重新加载）
 onBeforeRouteLeave((to, from, next) => {
-  pluginView.hideActive()
+  if (plugin.value?.keepAlive) {
+    pluginView.leave(pluginId.value)
+  } else {
+    pluginView.close(pluginId.value)
+  }
   next()
 })
 
 watch([pluginId, plugin], async ([id, p]) => {
-  if (p?.entryHtml) {
-    pluginUrl.value = await resolvePluginUrl(p.entryHtml)
+  if (p && (p.entryUrl || p.entryHtml)) {
+    pluginUrl.value = await resolvePluginUrl(p.entryHtml, p.entryUrl ?? null)
     if (pluginUrl.value) {
-      await pluginView.navigate(id, pluginUrl.value)
+      await pluginView.navigate(id, pluginUrl.value, p.keepAlive ?? false)
     }
   }
 })

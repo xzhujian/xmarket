@@ -1,8 +1,7 @@
 <template>
   <div class="my-apps-page">
-    <!-- 标题栏 + 操作按钮 -->
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-lg font-semibold" :style="{ color: 'var(--text-color)' }">{{ $t('market.my_apps') }}</h2>
+    <!-- 操作按钮（标题由 Plugins 页顶部 tab 表达） -->
+    <div class="flex items-center justify-end mb-4">
       <div class="flex items-center gap-2">
         <TButton variant="text" icon="refresh" :icon-size="18" @click="onRefresh" :title="$t('common.refresh')" :class="{ spinning }" />
         <TButton variant="accent" @click="selectZipFile">
@@ -27,18 +26,24 @@
     <!-- 插件列表 -->
     <div v-if="!loading && pluginStore.plugins.length" class="space-y-3">
       <div
-        v-for="plugin in sortedPlugins"
+        v-for="(plugin, index) in sortedPlugins"
         :key="plugin.id"
         class="plugin-item flex items-center justify-between p-4 rounded-xl transition-all duration-200"
+        :class="{ dragging: dragIndex === index }"
+        :data-index="index"
         :style="{
           background: 'var(--bg-setting-item)',
           border: '1px solid var(--line-color)',
           opacity: plugin.enabled ? 1 : 0.5,
         }"
       >
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <span class="drag-handle" title="拖动排序" @pointerdown.stop.prevent="startDrag(index, $event)">
+            <SvgIcon name="grip-vertical" :size="18" :style="{ color: 'var(--disabled-color)' }" />
+          </span>
           <IconBox size="sm">
-            <SvgIcon name="package" :size="20" :style="{ color: 'var(--accent-color)' }" />
+            <img v-if="plugin.iconUrl" :src="plugin.iconUrl" alt="" class="plugin-icon" />
+            <SvgIcon v-else name="package" :size="20" :style="{ color: 'var(--accent-color)' }" />
           </IconBox>
           <div>
             <h3 class="font-medium" :style="{ color: 'var(--text-color)' }">{{ plugin.name }}</h3>
@@ -50,8 +55,8 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <TButton variant="text" icon="download" :title="$t('market.pack')" @click="packPlugin(plugin)">
-            {{ $t('market.pack') }}
+          <TButton variant="text" icon="share" :title="$t('market.share')" @click="packPlugin(plugin)">
+            {{ $t('market.share') }}
           </TButton>
           <TButton
             :variant="plugin.enabled ? 'outline' : 'accent'"
@@ -70,13 +75,17 @@
     <div v-if="uninstallTarget" class="fixed inset-0 z-50 flex items-center justify-center" style="background: rgba(0,0,0,0.4)">
       <div class="rounded-xl p-6 w-80" :style="{ background: 'var(--bg-setting-item)', border: '1px solid var(--line-color)' }">
         <h3 class="font-semibold mb-2" :style="{ color: 'var(--text-color)' }">确认卸载</h3>
-        <p class="text-sm mb-4" :style="{ color: 'var(--disabled-color)' }">
+        <p class="text-sm mb-3" :style="{ color: 'var(--disabled-color)' }">
           确定要卸载 <strong :style="{ color: 'var(--text-color)' }">{{ uninstallTarget.name }}</strong> 吗？<br>
-          此操作将删除插件文件，不可恢复。
+          此操作将删除插件文件。
         </p>
+        <label class="flex items-center gap-2 text-sm mb-4" :style="{ color: 'var(--text-color)' }">
+          <input type="checkbox" v-model="removeDataOnUninstall" class="accent-current" />
+          <span>{{ $t('market.uninstall_remove_data') }}</span>
+        </label>
         <div class="flex justify-end gap-2">
-          <TButton variant="outline" @click="uninstallTarget = null">取消</TButton>
-          <TButton variant="accent" style="background: #ef4444" @click="doUninstall">确认卸载</TButton>
+          <TButton variant="outline" @click="uninstallTarget = null">{{ $t('common.cancel') }}</TButton>
+          <TButton variant="accent" style="background: #ef4444" @click="doUninstall">{{ $t('common.confirm') }}</TButton>
         </div>
       </div>
     </div>
@@ -99,7 +108,42 @@ const pluginStore = usePluginStore()
 const loading = ref(false)
 const spinning = ref(false)
 const uninstallTarget = ref<PluginItem | null>(null)
+const removeDataOnUninstall = ref(false)
 const { success, error } = useToast()
+
+// 拖动排序：按住把手用指针拖动，实时重排，松开后统一持久化
+const dragIndex = ref(-1)
+const dragging = ref(false)
+
+function startDrag(index: number, e: PointerEvent) {
+  if (e.button !== 0) return
+  dragIndex.value = index
+  dragging.value = true
+  document.body.style.userSelect = 'none'
+  window.addEventListener('pointermove', onPointerMove)
+  window.addEventListener('pointerup', endDrag)
+}
+
+function onPointerMove(e: PointerEvent) {
+  if (dragIndex.value < 0) return
+  const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null
+  const row = el?.closest<HTMLElement>('.plugin-item')
+  if (!row) return
+  const targetIndex = Number(row.dataset.index)
+  if (!Number.isNaN(targetIndex) && targetIndex !== dragIndex.value) {
+    pluginStore.moveLocal(dragIndex.value, targetIndex)
+    dragIndex.value = targetIndex
+  }
+}
+
+function endDrag() {
+  window.removeEventListener('pointermove', onPointerMove)
+  window.removeEventListener('pointerup', endDrag)
+  document.body.style.userSelect = ''
+  dragIndex.value = -1
+  dragging.value = false
+  pluginStore.persistOrder()
+}
 
 function onRefresh() {
   spinning.value = true
@@ -156,16 +200,18 @@ async function packPlugin(plugin: PluginItem) {
 }
 
 function confirmUninstall(plugin: PluginItem) {
+  removeDataOnUninstall.value = false
   uninstallTarget.value = plugin
 }
 
 async function doUninstall() {
   if (!uninstallTarget.value) return
   const plugin = uninstallTarget.value
+  const removeData = removeDataOnUninstall.value
   uninstallTarget.value = null
 
   try {
-    await pluginStore.uninstallPlugin(plugin.id)
+    await pluginStore.uninstallPlugin(plugin.id, removeData)
     success(`插件「${plugin.name}」已卸载`)
   } catch (err: any) {
     error(`卸载失败: ${err?.message || err}`)
@@ -174,6 +220,30 @@ async function doUninstall() {
 </script>
 
 <style scoped>
+.plugin-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.plugin-item {
+  &.dragging {
+    cursor: grabbing;
+    opacity: 0.4 !important;
+    transform: scale(0.98);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  }
+}
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  cursor: grab;
+  flex-shrink: 0;
+  user-select: none;
+  padding: 2px;
+  border-radius: 4px;
+  &:active { cursor: grabbing; }
+}
 .spinning :deep(.tbtn-icon) {
   animation: spin 0.6s ease-in-out;
 }

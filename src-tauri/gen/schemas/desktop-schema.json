@@ -387,16 +387,52 @@
       "description": "Permission identifier",
       "oneOf": [
         {
+          "description": "Enables the create_plugin_webview command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-create-plugin-webview",
+          "markdownDescription": "Enables the create_plugin_webview command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the delete_icon command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-delete-icon",
+          "markdownDescription": "Enables the delete_icon command without any pre-configured scope."
+        },
+        {
           "description": "Enables the delete_skin command without any pre-configured scope.",
           "type": "string",
           "const": "allow-delete-skin",
           "markdownDescription": "Enables the delete_skin command without any pre-configured scope."
         },
         {
-          "description": "Enables the get_plugin_db_path command without any pre-configured scope.",
+          "description": "Enables the get_app_defaults command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-get-plugin-db-path",
-          "markdownDescription": "Enables the get_plugin_db_path command without any pre-configured scope."
+          "const": "allow-get-app-defaults",
+          "markdownDescription": "Enables the get_app_defaults command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_app_icon command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-app-icon",
+          "markdownDescription": "Enables the get_app_icon command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_app_name command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-app-name",
+          "markdownDescription": "Enables the get_app_name command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_default_icon command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-default-icon",
+          "markdownDescription": "Enables the get_default_icon command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_plugin_icon_url command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-plugin-icon-url",
+          "markdownDescription": "Enables the get_plugin_icon_url command without any pre-configured scope."
         },
         {
           "description": "Enables the get_plugin_server_port command without any pre-configured scope.",
@@ -441,24 +477,6 @@
           "markdownDescription": "Enables the plugin_invoke command without any pre-configured scope."
         },
         {
-          "description": "Enables the plugin_runtime_list command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-plugin-runtime-list",
-          "markdownDescription": "Enables the plugin_runtime_list command without any pre-configured scope."
-        },
-        {
-          "description": "Enables the plugin_runtime_start command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-plugin-runtime-start",
-          "markdownDescription": "Enables the plugin_runtime_start command without any pre-configured scope."
-        },
-        {
-          "description": "Enables the plugin_runtime_stop command without any pre-configured scope.",
-          "type": "string",
-          "const": "allow-plugin-runtime-stop",
-          "markdownDescription": "Enables the plugin_runtime_stop command without any pre-configured scope."
-        },
-        {
           "description": "Enables the read_config command without any pre-configured scope.",
           "type": "string",
           "const": "allow-read-config",
@@ -469,6 +487,18 @@
           "type": "string",
           "const": "allow-read-window-state",
           "markdownDescription": "Enables the read_window_state command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the save_icon command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-save-icon",
+          "markdownDescription": "Enables the save_icon command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the save_market_zip command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-save-market-zip",
+          "markdownDescription": "Enables the save_market_zip command without any pre-configured scope."
         },
         {
           "description": "Enables the save_skin command without any pre-configured scope.",
@@ -513,16 +543,52 @@
           "markdownDescription": "Enables the write_window_state command without any pre-configured scope."
         },
         {
+          "description": "Denies the create_plugin_webview command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-create-plugin-webview",
+          "markdownDescription": "Denies the create_plugin_webview command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the delete_icon command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-delete-icon",
+          "markdownDescription": "Denies the delete_icon command without any pre-configured scope."
+        },
+        {
           "description": "Denies the delete_skin command without any pre-configured scope.",
           "type": "string",
           "const": "deny-delete-skin",
           "markdownDescription": "Denies the delete_skin command without any pre-configured scope."
         },
         {
-          "description": "Denies the get_plugin_db_path command without any pre-configured scope.",
+          "description": "Denies the get_app_defaults command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-get-plugin-db-path",
-          "markdownDescription": "Denies the get_plugin_db_path command without any pre-configured scope."
+          "const": "deny-get-app-defaults",
+          "markdownDescription": "Denies the get_app_defaults command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_app_icon command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-app-icon",
+          "markdownDescription": "Denies the get_app_icon command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_app_name command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-app-name",
+          "markdownDescription": "Denies the get_app_name command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_default_icon command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-default-icon",
+          "markdownDescription": "Denies the get_default_icon command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_plugin_icon_url command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-plugin-icon-url",
+          "markdownDescription": "Denies the get_plugin_icon_url command without any pre-configured scope."
         },
         {
           "description": "Denies the get_plugin_server_port command without any pre-configured scope.",
@@ -567,24 +633,6 @@
           "markdownDescription": "Denies the plugin_invoke command without any pre-configured scope."
         },
         {
-          "description": "Denies the plugin_runtime_list command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-plugin-runtime-list",
-          "markdownDescription": "Denies the plugin_runtime_list command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the plugin_runtime_start command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-plugin-runtime-start",
-          "markdownDescription": "Denies the plugin_runtime_start command without any pre-configured scope."
-        },
-        {
-          "description": "Denies the plugin_runtime_stop command without any pre-configured scope.",
-          "type": "string",
-          "const": "deny-plugin-runtime-stop",
-          "markdownDescription": "Denies the plugin_runtime_stop command without any pre-configured scope."
-        },
-        {
           "description": "Denies the read_config command without any pre-configured scope.",
           "type": "string",
           "const": "deny-read-config",
@@ -595,6 +643,18 @@
           "type": "string",
           "const": "deny-read-window-state",
           "markdownDescription": "Denies the read_window_state command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the save_icon command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-save-icon",
+          "markdownDescription": "Denies the save_icon command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the save_market_zip command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-save-market-zip",
+          "markdownDescription": "Denies the save_market_zip command without any pre-configured scope."
         },
         {
           "description": "Denies the save_skin command without any pre-configured scope.",

@@ -56,8 +56,11 @@ const appStore = useAppStore()
 onMounted(async () => {
   if (!inTauri()) return
   const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow')
-  await getCurrentWebviewWindow().show().catch(() => {})
-  await getCurrentWebviewWindow().setFocus().catch(() => {})
+  const win = getCurrentWebviewWindow()
+  // Windows 下带 parent 的子窗口会继承父窗口的最大化状态，显示前先还原，避免"最大化→缩小"闪一帧
+  await win.unmaximize().catch(() => {})
+  await win.show().catch(() => {})
+  await win.setFocus().catch(() => {})
 })
 
 const { locale } = useI18n()

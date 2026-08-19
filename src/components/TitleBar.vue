@@ -27,7 +27,7 @@
         <button
           class="tb-btn flex items-center justify-center"
           :title="appStore.isDark ? $t('theme.light') : $t('theme.dark')"
-          @click="appStore.isDark = !appStore.isDark"
+          @click="appStore.toggleTheme()"
         >
           <SvgIcon :name="appStore.isDark ? 'sun' : 'moon'" :size="15" />
         </button>
@@ -69,7 +69,7 @@
         </svg>
         <svg v-else width="12" height="12" viewBox="0 0 12 12" fill="none">
           <rect x="3" y="0.5" width="8" height="8" rx="0.5" stroke="currentColor" stroke-width="1" fill="none"/>
-          <rect x="0.5" y="3" width="8" height="8" rx="0.5" fill="var(--title-bar-bg, #f5f5f5)" stroke="currentColor" stroke-width="1"/>
+          <rect x="0.5" y="3" width="8" height="8" rx="0.5" fill="none" stroke="currentColor" stroke-width="1"/>
         </svg>
       </button>
       <button
@@ -142,6 +142,9 @@ async function updateMaximized() {
   isMaximized.value = await getCurrentWebviewWindow().isMaximized()
 }
 
+// resize 事件在拖动窗口时会连续触发，防抖到停止后只查一次，避免高频 IPC
+let resizeTimer: ReturnType<typeof setTimeout> | null = null
+
 // —— 窗口拖动（手动 API，替代 data-tauri-drag-region） ——
 let lastClickTime = 0
 let lastClickX = 0
@@ -192,7 +195,8 @@ onMounted(async () => {
   await updateMaximized()
   const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow')
   unlisten = await getCurrentWebviewWindow().onResized(() => {
-    updateMaximized()
+    if (resizeTimer) clearTimeout(resizeTimer)
+    resizeTimer = setTimeout(updateMaximized, 150)
   })
 
   // 绑定手动拖动监听
@@ -202,6 +206,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  if (resizeTimer) clearTimeout(resizeTimer)
   if (unlisten) unlisten()
   if (dragRegionRef.value) {
     dragRegionRef.value.removeEventListener('mousedown', onDragMouseDown)

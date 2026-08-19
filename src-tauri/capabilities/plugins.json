@@ -2,7 +2,7 @@
   "identifier": "plugins-capability",
   "description": "Permissions for plugin child webviews (remote origin)",
   "webviews": ["plugin-page-*"],
-  "remote": { "urls": ["http://127.0.0.1:*"] },
+  "remote": { "urls": ["http://*.localhost:*", "http://*", "https://*"] },
   "permissions": [
     "core:default",
     "core:event:default",

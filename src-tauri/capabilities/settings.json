@@ -21,6 +21,10 @@
     "allow-write-config",
     "allow-save-skin",
     "allow-list-skins",
-    "allow-delete-skin"
+    "allow-delete-skin",
+    "allow-save-icon",
+    "allow-get-app-icon",
+    "allow-delete-icon",
+    "allow-get-app-defaults"
   ]
 }

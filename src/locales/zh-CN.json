@@ -2,6 +2,7 @@
   "nav": {
     "home": "首页",
     "theme": "换肤",
+    "plugins": "插件",
     "market": "插件市场",
     "my_apps": "我的插件",
     "messages": "消息",
@@ -25,7 +26,8 @@
     "minimize": "最小化",
     "close": "关闭",
     "uninstall": "卸载",
-    "install": "安装插件"
+    "install": "安装插件",
+    "upgrade": "升级"
   },
   "layout": {
     "layout1": "贯穿侧栏模式",
@@ -39,8 +41,24 @@
     "all_apps": "全部插件",
     "my_apps": "我的插件",
     "pack": "打包",
+    "share": "分享",
     "no_plugins": "暂无插件，欢迎探索插件市场",
-    "no_my_plugins": "你还没有安装任何插件"
+    "no_my_plugins": "你还没有安装任何插件",
+    "load_failed": "插件市场加载失败，请检查网络或市场地址",
+    "installed_tip": "该插件已安装",
+    "details": "查看详情",
+    "detail_title": "插件详情",
+    "detail_back": "返回市场",
+    "detail_desc": "简介",
+    "detail_info": "详细信息",
+    "detail_id": "插件ID",
+    "detail_version": "版本",
+    "detail_author": "作者",
+    "detail_file": "文件名",
+    "detail_media": "媒体 / 更新日志",
+    "detail_media_empty": "暂无截图或更新日志",
+    "install_failed": "安装失败，请重试",
+    "uninstall_remove_data": "同时删除插件数据"
   },
   "message": {
     "title": "消息中心",
@@ -61,6 +79,7 @@
     "language": "语言",
     "layout": "布局方式",
     "layoutTab": "布局",
+    "advanced": "高级",
     "sidebarStyle": "侧边栏按钮",
     "sidebarRow": "左右风格",
     "sidebarColumn": "上下风格",
@@ -81,6 +100,12 @@
     "closeAsk": "每次询问",
     "closeHide": "隐藏到托盘",
     "closeDirect": "直接关闭",
+    "market": "市场",
+    "marketTip": "配置插件市场地址，配置好后插件页会显示对应市场。可配置多个市场，每个市场占一个栏目。",
+    "marketName": "市场名称",
+    "marketUrlPlaceholder": "市场地址，如 http://localhost:8787",
+    "marketAdd": "添加市场",
+    "marketEmpty": "尚未配置任何市场，点击「添加市场」开始",
     "about": "关于"
   },
   "about": {
@@ -106,5 +131,31 @@
   "welcome": {
     "title": "欢迎使用",
     "description": "请前往插件市场安装插件开始使用"
+  },
+  "home": {
+    "welcome_back": "欢迎回来",
+    "greet_dawn": "夜深了",
+    "greet_morning": "早上好",
+    "greet_noon": "中午好",
+    "greet_afternoon": "下午好",
+    "greet_evening": "晚上好",
+    "badge_native": "原生",
+    "empty_title": "还没有安装插件",
+    "empty_desc": "去插件市场，或在“我的插件”中安装你的第一个插件",
+    "my_apps": "我的插件",
+    "no_desc": "暂无描述",
+    "open": "打开",
+    "stat_installed": "已安装插件",
+    "stat_enabled": "已启用",
+    "stat_native": "原生后端",
+    "stat_market": "插件市场",
+    "usage_title": "启用概览",
+    "usage_enabled": "已启用",
+    "usage_disabled": "已停用",
+    "usage_native": "原生后端",
+    "usage_pure": "纯前端",
+    "type_title": "插件类型",
+    "market_desc": "更多插件即将上线，敬请期待",
+    "browse": "去逛逛"
   }
 }

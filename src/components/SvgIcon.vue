@@ -30,10 +30,12 @@ const iconMap: Record<string, any> = {
   moon: LucideIcons.Moon,
   download: LucideIcons.Download,
   upload: LucideIcons.Upload,
+  share: LucideIcons.Share,
   check: LucideIcons.Check,
   close: LucideIcons.X,
   menu: LucideIcons.Menu,
   search: LucideIcons.Search,
+  plus: LucideIcons.Plus,
   bell: LucideIcons.Bell,
   dashboard: LucideIcons.LayoutDashboard,
   folder: LucideIcons.Folder,
@@ -46,6 +48,9 @@ const iconMap: Record<string, any> = {
   refresh: LucideIcons.RefreshCw,
   star: LucideIcons.Star,
   license: LucideIcons.ScrollText,
+  wrench: LucideIcons.Wrench,
+  image: LucideIcons.Image,
+  'grip-vertical': LucideIcons.GripVertical,
 }
 
 const iconComponent = computed(() => iconMap[props.name] || LucideIcons.HelpCircle)

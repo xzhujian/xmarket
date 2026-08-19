@@ -17,10 +17,10 @@ export function usePluginWebview(containerRef: Ref<HTMLElement | null>) {
   })
 
   return {
-    open: (key: string, url: string) => runtime.openWindow(key, url),
-    navigate: (key: string, url: string) => runtime.openWindow(key, url),
+    open: (key: string, url: string, keepAlive = false) => runtime.openWindow(key, url, keepAlive),
+    navigate: (key: string, url: string, keepAlive = false) => runtime.openWindow(key, url, keepAlive),
     close: (key: string) => runtime.closeWindow(key),
-    hideActive: () => runtime.hideActive(),
+    leave: (key: string) => runtime.leaveWindow(key),
     suspend: () => runtime.suspendActive(),
     resume: () => runtime.resumeActive(),
   }

@@ -10,7 +10,8 @@
     "tauri": "tauri",
     "build:n": "tauri build --bundles nsis",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "build:brand": "node src-tauri/scripts/brand-build.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "2.11.1",

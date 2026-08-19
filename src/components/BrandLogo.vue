@@ -1,7 +1,7 @@
 <!-- 品牌 Logo：有自定义图标（appIcon）时用自定义图，否则用默认 logo.ico -->
 <template>
   <img
-    :src="appStore.appIcon || '/logo.ico'"
+    :src="appStore.appIconSrc || '/logo.ico'"
     alt="logo"
     class="brand-logo"
     :style="{ width: size + 'px', height: size + 'px' }"

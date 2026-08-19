@@ -2,6 +2,7 @@
   "nav": {
     "home": "Home",
     "theme": "Theme",
+    "plugins": "Plugins",
     "market": "Plugin Market",
     "my_apps": "My Plugins",
     "messages": "Messages",
@@ -25,7 +26,8 @@
     "minimize": "Minimize",
     "close": "Close",
     "uninstall": "Uninstall",
-    "install": "Install Plugin"
+    "install": "Install Plugin",
+    "upgrade": "Upgrade"
   },
   "layout": {
     "layout1": "Full-Height Sidebar",
@@ -39,8 +41,24 @@
     "all_apps": "All Plugins",
     "my_apps": "My Plugins",
     "pack": "Pack",
+    "share": "Share",
     "no_plugins": "No plugins yet. Explore the Plugin Market!",
-    "no_my_plugins": "You haven't installed any plugins yet"
+    "no_my_plugins": "You haven't installed any plugins yet",
+    "load_failed": "Failed to load the plugin market. Check your network or market URL.",
+    "installed_tip": "This plugin is already installed",
+    "details": "Details",
+    "detail_title": "Plugin Details",
+    "detail_back": "Back to Market",
+    "detail_desc": "Description",
+    "detail_info": "Details",
+    "detail_id": "Plugin ID",
+    "detail_version": "Version",
+    "detail_author": "Author",
+    "detail_file": "File",
+    "detail_media": "Media / Changelog",
+    "detail_media_empty": "No screenshots or changelog yet",
+    "install_failed": "Install failed, please try again",
+    "uninstall_remove_data": "Also delete plugin data"
   },
   "message": {
     "title": "Messages",
@@ -61,6 +79,7 @@
     "language": "Language",
     "layout": "Layout",
     "layoutTab": "Layout",
+    "advanced": "Advanced",
     "sidebarStyle": "Sidebar Buttons",
     "sidebarRow": "Row",
     "sidebarColumn": "Column",
@@ -81,6 +100,12 @@
     "closeAsk": "Always ask",
     "closeHide": "Hide to tray",
     "closeDirect": "Close directly",
+    "market": "Market",
+    "marketTip": "Add plugin market URLs here. Once configured, each market shows up as a tab in the Plugins page. Multiple markets are supported.",
+    "marketName": "Market name",
+    "marketUrlPlaceholder": "Market URL, e.g. http://localhost:8787",
+    "marketAdd": "Add Market",
+    "marketEmpty": "No markets configured yet. Click \"Add Market\" to start.",
     "about": "About"
   },
   "about": {
@@ -106,5 +131,31 @@
   "welcome": {
     "title": "Welcome",
     "description": "Go to Plugin Market to install plugins and get started"
+  },
+  "home": {
+    "welcome_back": "Welcome back",
+    "greet_dawn": "It's late",
+    "greet_morning": "Good morning",
+    "greet_noon": "Good noon",
+    "greet_afternoon": "Good afternoon",
+    "greet_evening": "Good evening",
+    "badge_native": "Native",
+    "empty_title": "No plugins installed yet",
+    "empty_desc": "Visit the Plugin Market or install your first plugin in My Plugins",
+    "my_apps": "My Plugins",
+    "no_desc": "No description",
+    "open": "Open",
+    "stat_installed": "Installed",
+    "stat_enabled": "Enabled",
+    "stat_native": "Native backend",
+    "stat_market": "Plugin Market",
+    "usage_title": "Enable overview",
+    "usage_enabled": "Enabled",
+    "usage_disabled": "Disabled",
+    "usage_native": "Native backend",
+    "usage_pure": "Frontend only",
+    "type_title": "Plugin type",
+    "market_desc": "More plugins coming soon",
+    "browse": "Explore"
   }
 }

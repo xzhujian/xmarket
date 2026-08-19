@@ -4,6 +4,7 @@
       <SvgIcon :name="icon" :size="48" class="empty-icon" />
     </slot>
     <p class="empty-text">{{ text }}</p>
+    <slot name="action" />
   </div>
 </template>
 

@@ -129,4 +129,9 @@ export async function restoreWindowState(): Promise<void> {
   // 主窗口以隐藏方式创建(避免"初始尺寸→恢复尺寸"闪动),恢复到位后再显示并聚焦到前台
   await win.show().catch(() => {})
   await win.setFocus().catch(() => {})
+  // 程序化 setPosition/setSize 不会触发页面的 resize 事件(手动拖拽窗口才会)。
+  // 这里在下一帧(布局已按恢复后尺寸落定)显式派发一次 resize，让依赖窗口尺寸的组件(如图表)重排。
+  requestAnimationFrame(() => {
+    window.dispatchEvent(new Event('resize'))
+  })
 }

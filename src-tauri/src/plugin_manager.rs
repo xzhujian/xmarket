@@ -19,6 +19,8 @@ pub struct PluginManifest {
     pub version: String,
     pub author: String,
     pub description: String,
+    /// 插件图标文件名(icon.svg/png...)；缺省为空串，前端用默认占位图标
+    #[serde(default)]
     pub icon: String,
     #[serde(default = "default_display")]
     pub display: String,
@@ -31,6 +33,9 @@ pub struct PluginManifest {
     pub default_config: Option<serde_json::Value>,
     pub homepage: Option<String>,
     pub license: Option<String>,
+    /// 常驻运行：离开插件页后是否保留运行(默认 false=打开即开离开即关)
+    #[serde(default, rename = "keepAlive")]
+    pub keep_alive: bool,
 }
 
 fn default_display() -> String {
@@ -39,7 +44,11 @@ fn default_display() -> String {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ManifestEntry {
+    #[serde(default)]
     pub frontend: String,
+    /// 网络型插件：直接指定远程入口 URL，打开插件即打开该地址
+    #[serde(default)]
+    pub url: Option<String>,
     #[serde(default)]
     pub backend: Option<ManifestBackend>,
 }
@@ -66,14 +75,22 @@ pub struct PluginItem {
     pub author: String,
     pub description: String,
     pub icon: String,
+    /// 插件图标文件的绝对路径（无图标时为 None），供前端 asset 协议直读
+    pub icon_path: Option<String>,
     pub enabled: bool,
     pub sort_order: i32,
     pub display: String,
     pub entry_html: String,
     pub has_backend: bool,
+    /// 网络型插件的远程入口 URL(有值则打开插件即打开该地址,否则用本地 entry_html)
+    pub entry_url: Option<String>,
+    /// 常驻运行：离开插件页后是否保留运行
+    pub keep_alive: bool,
+    /// 安装该插件时来自哪个市场地址（本地安装为 None）
+    pub source_market: Option<String>,
 }
 
-/// 插件状态（持久化到 JSON）
+/// 插件状态（持久化到 SQLite）
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PluginState {
     pub enabled: bool,
@@ -81,6 +98,8 @@ pub struct PluginState {
     pub is_default_page: bool,
     pub sort_order: i32,
     pub display_mode: String,
+    /// 安装来源市场地址（本地安装为 None）
+    pub source_market: Option<String>,
 }
 
 impl Default for PluginState {
@@ -91,6 +110,7 @@ impl Default for PluginState {
             is_default_page: false,
             sort_order: 0,
             display_mode: "default".to_string(),
+            source_market: None,
         }
     }
 }
@@ -104,6 +124,7 @@ struct PluginStateRow {
     is_default_page: bool,
     sort_order: i32,
     display_mode: String,
+    source_market: Option<String>,
 }
 
 impl From<PluginStateRow> for PluginState {
@@ -114,6 +135,7 @@ impl From<PluginStateRow> for PluginState {
             is_default_page: r.is_default_page,
             sort_order: r.sort_order,
             display_mode: r.display_mode,
+            source_market: r.source_market,
         }
     }
 }
@@ -181,12 +203,26 @@ pub fn init_db(app: &AppHandle) -> Result<(), String> {
                 show_on_home    INTEGER NOT NULL DEFAULT 0,
                 is_default_page INTEGER NOT NULL DEFAULT 0,
                 sort_order      INTEGER NOT NULL DEFAULT 0,
-                display_mode    TEXT NOT NULL DEFAULT 'default'
+                display_mode    TEXT NOT NULL DEFAULT 'default',
+                source_market   TEXT
             )",
         )
         .execute(&pool),
     )
     .map_err(|e| format!("创建插件状态表失败: {}", e))?;
+
+    // 老库迁移：补上后续新增的 source_market 列（已存在则忽略，不算错误）
+    let migrate_res = tauri::async_runtime::block_on(
+        sqlx::query(
+            "ALTER TABLE plugin_states ADD COLUMN source_market TEXT",
+        )
+        .execute(&pool),
+    );
+    if let Err(e) = migrate_res {
+        if !e.to_string().to_lowercase().contains("duplicate column") {
+            return Err(format!("迁移插件状态表失败: {}", e));
+        }
+    }
     app.manage(Db(pool));
     Ok(())
 }
@@ -199,7 +235,7 @@ fn get_pool(app: &AppHandle) -> SqlitePool {
 /// 读取某插件状态（不存在则返回默认）
 async fn get_state(pool: &SqlitePool, id: &str) -> Result<PluginState, String> {
     let row = sqlx::query_as::<_, PluginStateRow>(
-        "SELECT plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode
+        "SELECT plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode, source_market
          FROM plugin_states WHERE plugin_id = ?",
     )
     .bind(id)
@@ -212,7 +248,7 @@ async fn get_state(pool: &SqlitePool, id: &str) -> Result<PluginState, String> {
 /// 读取全部插件状态
 async fn load_all_states(pool: &SqlitePool) -> Result<HashMap<String, PluginState>, String> {
     let rows = sqlx::query_as::<_, PluginStateRow>(
-        "SELECT plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode
+        "SELECT plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode, source_market
          FROM plugin_states",
     )
     .fetch_all(pool)
@@ -228,14 +264,15 @@ async fn load_all_states(pool: &SqlitePool) -> Result<HashMap<String, PluginStat
 async fn upsert_state(pool: &SqlitePool, id: &str, state: &PluginState) -> Result<(), String> {
     sqlx::query(
         "INSERT INTO plugin_states
-           (plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode)
-         VALUES (?, ?, ?, ?, ?, ?)
+           (plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode, source_market)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(plugin_id) DO UPDATE SET
            enabled = excluded.enabled,
            show_on_home = excluded.show_on_home,
            is_default_page = excluded.is_default_page,
            sort_order = excluded.sort_order,
-           display_mode = excluded.display_mode",
+           display_mode = excluded.display_mode,
+           source_market = excluded.source_market",
     )
     .bind(id)
     .bind(state.enabled)
@@ -243,6 +280,7 @@ async fn upsert_state(pool: &SqlitePool, id: &str, state: &PluginState) -> Resul
     .bind(state.is_default_page)
     .bind(state.sort_order)
     .bind(&state.display_mode)
+    .bind(&state.source_market)
     .execute(pool)
     .await
     .map_err(|e| format!("写入插件状态失败: {}", e))?;
@@ -276,18 +314,29 @@ fn scan_single_plugin(_app: &AppHandle, plugin_dir: &Path, state: &HashMap<Strin
     let entry_html = PathBuf::from(&manifest.entry.frontend);
     let full_entry = plugin_dir.join(&entry_html);
 
+    let icon_rel = manifest.icon;
+    let icon_path = if icon_rel.is_empty() {
+        None
+    } else {
+        Some(plugin_dir.join(&icon_rel).to_string_lossy().to_string())
+    };
+
     Some(PluginItem {
         id: plugin_id,
         name: manifest.name,
         version: manifest.version,
         author: manifest.author,
         description: manifest.description,
-        icon: manifest.icon,
+        icon: icon_rel,
+        icon_path,
         enabled: plugin_state.enabled,
         sort_order: plugin_state.sort_order,
         display: manifest.display,
         entry_html: full_entry.to_string_lossy().to_string(),
         has_backend: manifest.entry.backend.is_some(),
+        entry_url: manifest.entry.url,
+        keep_alive: manifest.keep_alive,
+        source_market: plugin_state.source_market,
     })
 }
 
@@ -322,9 +371,28 @@ pub async fn scan_plugins(app: AppHandle) -> Result<Vec<PluginItem>, String> {
     Ok(items)
 }
 
-/// 安装插件（解压 zip）
+/// 把市场下载的 zip 字节写入系统临时目录，返回临时文件路径（供 install_plugin 解压）
 #[tauri::command]
-pub async fn install_plugin(app: AppHandle, zip_path: String) -> Result<PluginItem, String> {
+pub fn save_market_zip(filename: String, bytes: Vec<u8>) -> Result<String, String> {
+    // 只取文件名部分，防路径穿越
+    let name = Path::new(&filename)
+        .file_name()
+        .map(|s| s.to_string_lossy().to_string())
+        .unwrap_or_else(|| "plugin.zip".to_string());
+    let path = std::env::temp_dir().join(name);
+    let mut file = fs::File::create(&path).map_err(|e| format!("创建临时文件失败: {}", e))?;
+    file.write_all(&bytes).map_err(|e| format!("写入临时文件失败: {}", e))?;
+    Ok(path.to_string_lossy().to_string())
+}
+
+/// 安装插件（解压 zip）。market_url 为来源市场地址（本地安装可不传），
+/// 全新安装排到列表末尾并启用；升级/重装保留原排序与状态、仅更新来源市场。
+#[tauri::command]
+pub async fn install_plugin(
+    app: AppHandle,
+    zip_path: String,
+    market_url: Option<String>,
+) -> Result<PluginItem, String> {
     let zip_path = PathBuf::from(&zip_path);
     if !zip_path.exists() {
         return Err("ZIP 文件不存在".to_string());
@@ -427,17 +495,23 @@ pub async fn install_plugin(app: AppHandle, zip_path: String) -> Result<PluginIt
         }
     }
 
-    // 更新状态（新增，默认启用）
+    // 更新状态：全新安装排末尾并启用；升级保留原排序/状态，仅更新来源市场
     let pool = get_pool(&app);
-    upsert_state(
-        &pool,
-        &plugin_id,
-        &PluginState {
+    let states = load_all_states(&pool).await?;
+    let new_state = if let Some(existing) = states.get(&plugin_id) {
+        let mut s = existing.clone();
+        s.source_market = market_url;
+        s
+    } else {
+        let max_order = states.values().map(|s| s.sort_order).max().unwrap_or(-1);
+        PluginState {
             enabled: true,
+            sort_order: max_order + 1,
+            source_market: market_url,
             ..Default::default()
-        },
-    )
-    .await?;
+        }
+    };
+    upsert_state(&pool, &plugin_id, &new_state).await?;
 
     // 重新扫描返回
     let state = load_all_states(&pool).await?;
@@ -514,9 +588,14 @@ fn add_dir_to_zip(
     Ok(())
 }
 
-/// 卸载插件
+/// 卸载插件。remove_data 为 true 时连数据目录一起删除（彻底卸载）；
+/// 默认（false）仅删除插件源码与状态，保留插件数据（重装后仍在）。
 #[tauri::command]
-pub async fn uninstall_plugin(app: AppHandle, plugin_id: String) -> Result<(), String> {
+pub async fn uninstall_plugin(
+    app: AppHandle,
+    plugin_id: String,
+    remove_data: Option<bool>,
+) -> Result<(), String> {
     let plugins_dir = get_plugins_dir(&app);
     let plugin_dir = plugins_dir.join(&plugin_id);
 
@@ -528,11 +607,13 @@ pub async fn uninstall_plugin(app: AppHandle, plugin_id: String) -> Result<(), S
     fs::remove_dir_all(&plugin_dir)
         .map_err(|e| format!("删除插件目录失败: {}", e))?;
 
-    // 删除插件数据目录
-    let data_dir = get_plugins_data_dir(&app);
-    let plugin_data_dir = data_dir.join(&plugin_id);
-    if plugin_data_dir.exists() {
-        fs::remove_dir_all(&plugin_data_dir).ok();
+    // 彻底卸载时删除插件数据目录；默认保留
+    if remove_data.unwrap_or(false) {
+        let data_dir = get_plugins_data_dir(&app);
+        let plugin_data_dir = data_dir.join(&plugin_id);
+        if plugin_data_dir.exists() {
+            fs::remove_dir_all(&plugin_data_dir).ok();
+        }
     }
 
     // 从状态表中移除

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-get-plugin-icon-url"
+description = "Enables the get_plugin_icon_url command without any pre-configured scope."
+commands.allow = ["get_plugin_icon_url"]
+
+[[permission]]
+identifier = "deny-get-plugin-icon-url"
+description = "Denies the get_plugin_icon_url command without any pre-configured scope."
+commands.deny = ["get_plugin_icon_url"]

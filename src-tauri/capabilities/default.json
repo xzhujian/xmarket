@@ -41,6 +41,7 @@
     "dialog:allow-save",
     "allow-scan-plugins",
     "allow-install-plugin",
+    "allow-save-market-zip",
     "allow-pack-plugin",
     "allow-toggle-plugin",
     "allow-set-plugin-sort",
@@ -49,12 +50,18 @@
     "allow-plugin-exit",
     "allow-get-plugin-server-port",
     "allow-get-plugin-server-url",
+    "allow-get-plugin-icon-url",
+    "allow-create-plugin-webview",
     "allow-read-config",
     "allow-write-config",
     "allow-read-window-state",
     "allow-write-window-state",
     "allow-save-skin",
     "allow-list-skins",
-    "allow-delete-skin"
+    "allow-delete-skin",
+    "allow-save-icon",
+    "allow-get-app-icon",
+    "allow-delete-icon",
+    "allow-get-app-defaults"
   ]
 }

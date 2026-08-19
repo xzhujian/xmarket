@@ -128,3 +128,114 @@ pub fn delete_skin(app: AppHandle, filename: String) -> Result<(), String> {
     }
     Ok(())
 }
+
+// ─── 自定义应用图标（icons/ 目录，字节经命令返回，不走 HTTP）──
+
+/// 保存自定义应用图标到资源目录 icons/ 下，返回文件名（空配置时用默认 logo）。
+/// 统一解码 → 压缩到 256px → 转 PNG，保证 setIcon 可解码且体积可控。
+#[tauri::command]
+pub fn save_icon(app: AppHandle, _filename: String, data: Vec<u8>) -> Result<String, String> {
+    let icons_dir = json_path(&app, "icons")?;
+    fs::create_dir_all(&icons_dir).map_err(|e| format!("创建图标目录失败: {}", e))?;
+
+    // 解码上传的任意图片（png/jpeg/webp/gif/ico）
+    let img = image::load_from_memory(&data).map_err(|e| format!("图标解码失败: {}", e))?;
+
+    // 尺寸过大则等比压缩到 256px 内
+    const MAX: u32 = 256;
+    let (w, h) = (img.width(), img.height());
+    let img = if w > MAX || h > MAX {
+        if w >= h {
+            img.thumbnail(MAX, ((MAX as f32 * h as f32) / w as f32).round() as u32)
+        } else {
+            img.thumbnail(((MAX as f32 * w as f32) / h as f32).round() as u32, MAX)
+        }
+    } else {
+        img
+    };
+
+    // 统一转成 PNG
+    let mut buf = Vec::new();
+    {
+        let mut cursor = std::io::Cursor::new(&mut buf);
+        img.write_to(&mut cursor, image::ImageFormat::Png)
+            .map_err(|e| format!("图标转 PNG 失败: {}", e))?;
+    }
+
+    // 清理旧的自定义图标，避免堆积
+    if let Ok(entries) = fs::read_dir(&icons_dir) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.starts_with("appicon_") {
+                let _ = fs::remove_file(entry.path());
+            }
+        }
+    }
+
+    let millis = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis())
+        .unwrap_or(0);
+    let file_name = format!("appicon_{}.png", millis);
+    let dest = icons_dir.join(&file_name);
+    fs::write(&dest, &buf).map_err(|e| format!("写入图标文件失败: {}", e))?;
+
+    Ok(file_name)
+}
+
+/// 读取当前自定义应用图标字节（无自定义图标则返回空）
+#[tauri::command]
+pub fn get_app_icon(app: AppHandle) -> Result<Vec<u8>, String> {
+    let icons_dir = json_path(&app, "icons")?;
+    if let Ok(entries) = fs::read_dir(&icons_dir) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.starts_with("appicon_") {
+                return fs::read(entry.path()).map_err(|e| format!("读取图标失败: {}", e));
+            }
+        }
+    }
+    Ok(Vec::new())
+}
+
+/// 删除自定义应用图标文件（仅允许删除 appicon_ 文件）
+#[tauri::command]
+pub fn delete_icon(app: AppHandle, filename: String) -> Result<(), String> {
+    let name = std::path::Path::new(&filename)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .filter(|n| n.starts_with("appicon_"))
+        .ok_or_else(|| "非法文件名".to_string())?;
+    let icons_dir = json_path(&app, "icons")?;
+    let path = icons_dir.join(name);
+    if let Ok(canonical) = path.canonicalize() {
+        if canonical.starts_with(&icons_dir) {
+            fs::remove_file(&canonical).map_err(|e| format!("删除图标失败: {}", e))?;
+        }
+    }
+    Ok(())
+}
+
+/// 当前应用的默认名称与默认图标(同一安装包内固定,由打包品牌 branding.json 决定)。
+/// 名称 = 打包 productName;图标 = 内嵌窗口图标(RGBA 转 PNG),与 exe/系统窗口图标一致。
+#[derive(serde::Serialize)]
+pub struct AppDefaults {
+    name: String,
+    icon: Vec<u8>,
+}
+
+#[tauri::command]
+pub fn get_app_defaults(app: AppHandle) -> Result<AppDefaults, String> {
+    let name = app.package_info().name.to_string();
+    let mut icon = Vec::new();
+    if let Some(img) = app.default_window_icon() {
+        let (w, h) = (img.width(), img.height());
+        let buf = image::RgbaImage::from_raw(w, h, img.rgba().to_vec())
+            .ok_or_else(|| "图标像素解码失败".to_string())?;
+        let mut cursor = std::io::Cursor::new(&mut icon);
+        image::DynamicImage::ImageRgba8(buf)
+            .write_to(&mut cursor, image::ImageFormat::Png)
+            .map_err(|e| format!("图标转 PNG 失败: {}", e))?;
+    }
+    Ok(AppDefaults { name, icon })
+}

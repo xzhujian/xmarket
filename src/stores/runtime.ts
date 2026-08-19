@@ -3,18 +3,20 @@ import { ref } from 'vue'
 import { Webview } from '@tauri-apps/api/webview'
 import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { invoke } from '@tauri-apps/api/core'
 import { useDebugStore } from '@/stores/debug'
 
 /** 插件窗口形态。当前只实现内嵌子 webview；未来新增形态（如独立窗口）在此扩展 */
 export type PluginWindowKind = 'inline'
-/** 插件窗口显示态：active 前台 / hidden 隐藏(切走缓存) / suspended 模态临时隐藏 */
-export type PluginViewState = 'active' | 'hidden' | 'suspended'
+/** 插件窗口显示态：active 前台 / suspended 模态临时隐藏 / hidden 常驻但离开页面 */
+export type PluginViewState = 'active' | 'suspended' | 'hidden'
 
 export interface PluginWindow {
   pluginId: string
   label: string
   url: string
   kind: PluginWindowKind
+  keepAlive: boolean
   viewState: PluginViewState
 }
 
@@ -114,7 +116,20 @@ async function ensureEntry(key: string, url: string): Promise<PageEntry | null> 
   }
   const label = `${LABEL_PREFIX}${key}`
   try {
-    const wv = new Webview(getCurrentWindow(), label, { url, ...rect })
+    // 由 Rust 侧创建（带初始化脚本，注入自定义右键菜单），再按 label 拿 JS 句柄。
+    await invoke('create_plugin_webview', {
+      label,
+      url,
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height,
+    })
+    const wv = await Webview.getByLabel(label)
+    if (!wv) {
+      debug.error(`[Window] created but handle missing: ${label}`)
+      return null
+    }
     const newEntry: PageEntry = { key, label, url, wv }
     pages.set(key, newEntry)
     return newEntry
@@ -178,23 +193,24 @@ async function execClose(key: string) {
 export const useRuntimeStore = defineStore('runtime', () => {
   /** 已打开的插件窗口（key = 插件 id） */
   const windows = ref<Record<string, PluginWindow>>({})
-  /** 当前前台插件窗口 id（其余已打开窗口保持存活但隐藏） */
+  /** 当前前台插件窗口 id */
   const activeId = ref<string | null>(null)
 
-  function getWindow(id: string): PluginWindow | undefined {
-    return windows.value[id]
-  }
-
-  /** 打开/切换到某插件的窗口：隐藏当前前台 → 显示目标 → 登记 */
+  /** 打开某插件窗口：切入启动。切走时——旧前台若是常驻(keepAlive)则隐藏保留，否则彻底关闭 */
   async function openWindow(
     pluginId: string,
     url: string,
+    keepAlive = false,
     kind: PluginWindowKind = 'inline',
   ) {
     if (activeId.value && activeId.value !== pluginId) {
       const prev = windows.value[activeId.value]
-      await execHide(activeId.value)
-      if (prev) prev.viewState = 'hidden'
+      if (prev?.keepAlive) {
+        await execHide(activeId.value)
+        prev.viewState = 'hidden'
+      } else {
+        await closeWindow(activeId.value)
+      }
     }
     await execOpen(pluginId, url)
     windows.value[pluginId] = {
@@ -202,32 +218,13 @@ export const useRuntimeStore = defineStore('runtime', () => {
       label: `${LABEL_PREFIX}${pluginId}`,
       url,
       kind,
+      keepAlive,
       viewState: 'active',
     }
     activeId.value = pluginId
   }
 
-  /** 已打开的窗口切到前台（不重建，直接显示） */
-  async function switchTo(pluginId: string) {
-    if (!windows.value[pluginId]) return
-    if (activeId.value && activeId.value !== pluginId) {
-      const prev = windows.value[activeId.value]
-      await execHide(activeId.value)
-      if (prev) prev.viewState = 'hidden'
-    }
-    await execShow(pluginId)
-    windows.value[pluginId].viewState = 'active'
-    activeId.value = pluginId
-  }
-
-  /** 隐藏某插件窗口（切走/离开页面缓存，实例保留） */
-  async function hideWindow(pluginId: string) {
-    await execHide(pluginId)
-    if (windows.value[pluginId]) windows.value[pluginId].viewState = 'hidden'
-    if (activeId.value === pluginId) activeId.value = null
-  }
-
-  /** 模态打开：临时隐藏某插件窗口（activeId 保留，模态关闭后恢复） */
+  /** 模态打开：临时隐藏当前前台插件窗口（activeId 保留，模态关闭后恢复） */
   async function suspendWindow(pluginId: string) {
     await execHide(pluginId)
     if (windows.value[pluginId]) windows.value[pluginId].viewState = 'suspended'
@@ -239,20 +236,18 @@ export const useRuntimeStore = defineStore('runtime', () => {
     if (windows.value[pluginId]) windows.value[pluginId].viewState = 'active'
   }
 
-  /** 彻底关闭某插件窗口（销毁 webview + 移除登记） */
+  /** 常驻插件离开页面：隐藏 webview 但保留运行，可再次切入 */
+  async function leaveWindow(pluginId: string) {
+    await execHide(pluginId)
+    if (windows.value[pluginId]) windows.value[pluginId].viewState = 'hidden'
+    if (activeId.value === pluginId) activeId.value = null
+  }
+
+  /** 退出关闭：销毁 webview + 移除登记 */
   async function closeWindow(pluginId: string) {
     await execClose(pluginId)
     delete windows.value[pluginId]
     if (activeId.value === pluginId) activeId.value = null
-  }
-
-  /** 该插件窗口是否已打开（存活） */
-  function hasWindow(pluginId: string): boolean {
-    return !!windows.value[pluginId]
-  }
-
-  async function hideActive() {
-    if (activeId.value) await hideWindow(activeId.value)
   }
 
   async function suspendActive() {
@@ -266,15 +261,9 @@ export const useRuntimeStore = defineStore('runtime', () => {
   return {
     windows,
     activeId,
-    getWindow,
     openWindow,
-    switchTo,
-    hideWindow,
-    suspendWindow,
-    resumeWindow,
     closeWindow,
-    hasWindow,
-    hideActive,
+    leaveWindow,
     suspendActive,
     resumeActive,
     bindContainer,

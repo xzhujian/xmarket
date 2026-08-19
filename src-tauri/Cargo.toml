@@ -9,14 +9,20 @@ edition = "2021"
 name = "framework_app_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
+# 主程序 exe 名 = 稳定默认「企与星河」；化妆打包由 brand-build.mjs 临时切换此名
+[[bin]]
+name = "企与星河"
+path = "src/main.rs"
+
 [build-dependencies]
 tauri-build = { version = "=2.6.3", features = [] }
 
 [dependencies]
 tauri = { version = "=2.11.5", features = ["tray-icon", "protocol-asset", "webview-data-url", "unstable", "image-ico", "image-png"] }
-image = { version = "0.25", features = ["jpeg", "webp", "gif"] }
+image = { version = "0.25", features = ["png", "jpeg", "webp", "gif"] }
 tauri-plugin-shell = "=2.3.5"
 tauri-plugin-dialog = "=2.7.2"
+tauri-plugin-single-instance = "2"
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.151"

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-create-plugin-webview"
+description = "Enables the create_plugin_webview command without any pre-configured scope."
+commands.allow = ["create_plugin_webview"]
+
+[[permission]]
+identifier = "deny-create-plugin-webview"
+description = "Denies the create_plugin_webview command without any pre-configured scope."
+commands.deny = ["create_plugin_webview"]
