@@ -10,7 +10,7 @@ const REPO = {
   owner: 'enterprise-and-galaxy',
   repo: 'qyxh', // 主项目仓库(源码 + version.json + 发行版附件全在这)
   branch: 'master', // 版本检查(version.json raw 直链)用的分支
-  tagPrefix: 'v', // Release tag 前缀,例: v0.1.2
+  tagPrefix: '', // Release tag 前缀,例: v0.1.2;当前用 0.1.2(不带 v),与 Gitee 上建的 tag 保持一致
   exeName: '企与星河.exe', // 主程序 exe 文件名(下载 URL 里要用,须与 Release 附件一致)
 }
 
