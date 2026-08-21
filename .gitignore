@@ -4,8 +4,13 @@ node_modules/
 # Build output
 dist/
 
+# 发版暂存目录:release/version.json 随主仓库进 git,exe 作为发行版附件不进 git
+release/*
+!release/version.json
+
 # Rust build artifacts (Tauri)
 src-tauri/target/
+updater/target/
 
 # Environment files
 .env
