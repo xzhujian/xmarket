@@ -261,11 +261,11 @@ onMounted(load)
   .card-name {
     margin: 0; font-size: 15px; font-weight: 600; line-height: 1.35;
     color: var(--text-color); word-break: break-word;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: clip;
   }
   .card-meta {
     display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--disabled-color);
-    margin-bottom: 10px; .dot { color: var(--line-color); } .author { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    margin-bottom: 10px; .dot { color: var(--line-color); } .author { max-width: 120px; overflow: clip; text-overflow: ellipsis; white-space: nowrap; }
   }
 
   // —— 安装按钮（头部主操作） ——
@@ -308,7 +308,7 @@ onMounted(load)
   .card-desc {
     height: calc(13px * 1.55 * 3); margin: 0; font-size: 13px; line-height: 1.55;
     color: color-mix(in srgb, var(--text-color) 74%, transparent);
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: clip;
   }
 }
 

@@ -1,0 +1,57 @@
+//! 自升级:下载 updater.exe → 拉起它(由 updater 下载新 exe、终止主程序、替换、重启)。
+//! 只更新主程序 exe;插件/数据/配置都在 resources,由用户自留,不动。
+
+use std::fs;
+use std::io::Read;
+
+/// updater 状态文件的路径(与 updater.exe 写的是同一个文件)
+fn status_path() -> std::path::PathBuf {
+    std::env::temp_dir().join("framework-update-status.json")
+}
+
+/// 从 updaterUrl 下载 updater.exe 到临时目录,拉起它准备执行升级。
+/// updater 会自己下载新 exe;任何下载失败都由 updater 写 error 状态并退出,
+/// 主程序通过 get_update_status 感知后可继续运行、重试。
+#[tauri::command]
+pub fn apply_update(
+    updater_url: String,
+    version_url: String,
+) -> Result<(), String> {
+    // 1. 下载 updater.exe(小而快,主程序负责拉它)
+    let resp = ureq::get(&updater_url)
+        .call()
+        .map_err(|e| format!("下载更新助手失败: {}", e))?;
+    let mut bytes = Vec::new();
+    resp.into_reader()
+        .read_to_end(&mut bytes)
+        .map_err(|e| format!("读取更新助手失败: {}", e))?;
+    if bytes.is_empty() {
+        return Err("下载的更新助手为空".to_string());
+    }
+
+    let updater_exe = std::env::temp_dir().join("framework-updater.exe");
+    fs::write(&updater_exe, &bytes).map_err(|e| format!("写入更新助手失败: {}", e))?;
+
+    // 2. 当前主程序 exe 路径与自身 PID
+    let current_exe =
+        std::env::current_exe().map_err(|e| format!("获取当前程序路径失败: {}", e))?;
+    let pid = std::process::id().to_string();
+
+    // 3. 清空状态文件,标记开始;拉起 updater(独立进程),随后主程序只转圈等待
+    fs::write(status_path(), r#"{"phase":"downloading"}"#).ok();
+    let _ = std::process::Command::new(&updater_exe)
+        .arg(&current_exe)
+        .arg(&pid)
+        .arg(&version_url)
+        .spawn()
+        .map_err(|e| format!("启动更新助手失败: {}", e))?;
+
+    Ok(())
+}
+
+/// 读取 updater 当前进度状态,供前端轮询做失败恢复。
+/// 返回 "idle"(未在更新)/ "downloading" / "ready" / "error" 之一(或 error 时带 message)。
+#[tauri::command]
+pub fn get_update_status() -> String {
+    fs::read_to_string(status_path()).unwrap_or_else(|_| r#"{"phase":"idle"}"#.to_string())
+}

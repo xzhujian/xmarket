@@ -106,6 +106,13 @@
     "marketUrlPlaceholder": "Market URL, e.g. http://localhost:8787",
     "marketAdd": "Add Market",
     "marketEmpty": "No markets configured yet. Click \"Add Market\" to start.",
+    "checkUpdate": "Check for Updates",
+    "updateLatest": "You are up to date",
+    "updateTooOld": "Your version is too old to update directly. Please manually reinstall v{min} or newer",
+    "updateFailed": "Update check failed, please retry",
+    "updateFoundTitle": "Update Available",
+    "updateFoundMsg": "Version v{version} is available. Download and install now?",
+    "updateRestarting": "Updating, the app will restart...",
     "about": "About"
   },
   "about": {

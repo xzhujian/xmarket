@@ -1,7 +1,7 @@
 {
   "name": "framework-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,8 @@
     "build:n": "tauri build --bundles nsis",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "build:brand": "node src-tauri/scripts/brand-build.mjs"
+    "build:brand": "node src-tauri/scripts/brand-build.mjs",
+    "build:updater": "cargo build --release --manifest-path updater/Cargo.toml && node scripts/gen-version.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "2.11.1",

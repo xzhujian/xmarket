@@ -4,6 +4,7 @@ mod plugin_runtime;
 mod plugin_server;
 mod settings;
 mod system;
+mod updater;
 
 use std::fs;
 use tauri::Manager;
@@ -61,6 +62,10 @@ pub fn run() {
             settings::get_app_icon,
             settings::delete_icon,
             settings::get_app_defaults,
+
+            // ── 自升级 ──
+            updater::apply_update,
+            updater::get_update_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -176,9 +176,9 @@ function open(id: string) {
   .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
   .plugin-icon { width: 26px; height: 26px; object-fit: contain; border-radius: 6px; }
   .badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; background: #8b5cf622; color: #8b5cf6; }
-  .card-name { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .card-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--disabled-color); margin-bottom: 10px; .dot { color: var(--line-color); } .truncate { max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } }
-  .card-desc { flex: 1; margin: 0 0 14px; font-size: 13px; line-height: 1.5; color: var(--disabled-color); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-name { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--text-color); white-space: nowrap; overflow: clip; text-overflow: ellipsis; }
+  .card-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--disabled-color); margin-bottom: 10px; .dot { color: var(--line-color); } .truncate { max-width: 60%; overflow: clip; text-overflow: ellipsis; white-space: nowrap; } }
+  .card-desc { flex: 1; margin: 0 0 14px; font-size: 13px; line-height: 1.5; color: var(--disabled-color); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: clip; }
   .card-footer { display: flex; justify-content: flex-end; padding-top: 10px; border-top: 1px solid var(--line-color); .open { display: inline-flex; align-items: center; gap: 2px; font-size: 13px; color: var(--disabled-color); transition: color 0.2s ease; } }
 }
 </style>

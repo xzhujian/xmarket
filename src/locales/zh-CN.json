@@ -106,6 +106,13 @@
     "marketUrlPlaceholder": "市场地址，如 http://localhost:8787",
     "marketAdd": "添加市场",
     "marketEmpty": "尚未配置任何市场，点击「添加市场」开始",
+    "checkUpdate": "检查更新",
+    "updateLatest": "已是最新版本",
+    "updateTooOld": "当前版本过低，无法直接升级，请手动重新安装 v{min} 或更高版本",
+    "updateFailed": "检查/更新失败，请重试",
+    "updateFoundTitle": "发现新版本",
+    "updateFoundMsg": "发现新版本 v{version}，是否下载并安装？",
+    "updateRestarting": "正在更新，程序将自动重启...",
     "about": "关于"
   },
   "about": {

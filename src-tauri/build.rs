@@ -26,6 +26,8 @@ fn main() {
                 "get_app_icon",
                 "delete_icon",
                 "get_app_defaults",
+                "apply_update",
+                "get_update_status",
             ]),
         ),
     )

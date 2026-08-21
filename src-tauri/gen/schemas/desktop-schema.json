@@ -387,6 +387,12 @@
       "description": "Permission identifier",
       "oneOf": [
         {
+          "description": "Enables the apply_update command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-apply-update",
+          "markdownDescription": "Enables the apply_update command without any pre-configured scope."
+        },
+        {
           "description": "Enables the create_plugin_webview command without any pre-configured scope.",
           "type": "string",
           "const": "allow-create-plugin-webview",
@@ -445,6 +451,12 @@
           "type": "string",
           "const": "allow-get-plugin-server-url",
           "markdownDescription": "Enables the get_plugin_server_url command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the get_update_status command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-get-update-status",
+          "markdownDescription": "Enables the get_update_status command without any pre-configured scope."
         },
         {
           "description": "Enables the install_plugin command without any pre-configured scope.",
@@ -543,6 +555,12 @@
           "markdownDescription": "Enables the write_window_state command without any pre-configured scope."
         },
         {
+          "description": "Denies the apply_update command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-apply-update",
+          "markdownDescription": "Denies the apply_update command without any pre-configured scope."
+        },
+        {
           "description": "Denies the create_plugin_webview command without any pre-configured scope.",
           "type": "string",
           "const": "deny-create-plugin-webview",
@@ -601,6 +619,12 @@
           "type": "string",
           "const": "deny-get-plugin-server-url",
           "markdownDescription": "Denies the get_plugin_server_url command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the get_update_status command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-get-update-status",
+          "markdownDescription": "Denies the get_update_status command without any pre-configured scope."
         },
         {
           "description": "Denies the install_plugin command without any pre-configured scope.",

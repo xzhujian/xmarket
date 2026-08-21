@@ -316,8 +316,28 @@
                   <span :style="{ color: 'var(--text-color)' }">Framework Team</span>
                 </div>
               </div>
+              <div class="mt-5">
+                <TButton variant="accent" class="w-full" :loading="checking" @click="checkForUpdate">
+                  {{ $t('settings.checkUpdate') }}
+                </TButton>
+              </div>
             </div>
           </Card>
+          <TModal v-model="updateModal" :title="$t('settings.updateFoundTitle')" size="sm" :closable="!updating" :close-on-overlay="!updating">
+            <p v-if="!updating" class="text-sm leading-relaxed" :style="{ color: 'var(--text-color)' }">
+              {{ $t('settings.updateFoundMsg', { version: pendingVersion }) }}
+            </p>
+            <div v-else class="flex items-center gap-3 py-1">
+              <span class="update-spinner" />
+              <span class="text-sm" :style="{ color: 'var(--text-color)' }">{{ $t('settings.updateRestarting') }}</span>
+            </div>
+            <template #footer>
+              <template v-if="!updating">
+                <TButton variant="outline" @click="updateModal = false">{{ $t('common.cancel') }}</TButton>
+                <TButton variant="accent" @click="confirmUpdate">{{ $t('common.confirm') }}</TButton>
+              </template>
+            </template>
+          </TModal>
         </div>
       </div>
     </div>
@@ -325,7 +345,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import type { AccentTheme, SidebarStyle, CloseBehavior } from '@/stores/app'
@@ -340,6 +360,11 @@ import TButton from '@/components/form/TButton.vue'
 import TModal from '@/components/form/TModal.vue'
 import { DEFAULT_SKINS, uploadSkin, listCustomSkins, deleteCustomSkin } from '@/services/skin'
 import { uploadIcon, deleteIcon } from '@/services/icon'
+import { useToast } from '@/composables/useToast'
+import { compareVersions } from '@/utils/version'
+import { getVersion } from '@tauri-apps/api/app'
+import { invoke } from '@tauri-apps/api/core'
+import { UPDATE_URL } from '@/constants/update'
 
 const { locale, t } = useI18n()
 const appStore = useAppStore()
@@ -373,6 +398,76 @@ function resetTitle() {
   appStore.setAppTitle(appStore.defaultTitle)
   titleDraft.value = appStore.defaultTitle
 }
+
+// —— 自升级：检查更新 ——
+const { success: toastSuccess, error: toastError, info: toastInfo } = useToast()
+const checking = ref(false)
+const updateModal = ref(false)
+const updating = ref(false)
+const pendingVersion = ref('')
+let pendingUpdaterUrl = ''
+async function checkForUpdate() {
+  checking.value = true
+  try {
+    const res = await fetch(UPDATE_URL)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const info = await res.json()
+    if (!info?.version || !info?.url || !info?.updaterUrl) throw new Error('version.json 格式错误')
+    const current = await getVersion()
+    if (compareVersions(info.version, current) <= 0) {
+      toastSuccess(t('settings.updateLatest'))
+      return
+    }
+    // 本地版本低于 minVersion 时无法直接跳级,提示手动安装,不提供一键下载
+    if (info.minVersion && compareVersions(current, info.minVersion) < 0) {
+      toastError(t('settings.updateTooOld', { min: info.minVersion }))
+      return
+    }
+    pendingVersion.value = info.version
+    pendingUpdaterUrl = info.updaterUrl
+    updateModal.value = true
+  } catch (err) {
+    console.error('[Settings] 检查更新失败', err)
+    toastError(t('settings.updateFailed'))
+  } finally {
+    checking.value = false
+  }
+}
+
+let statusTimer: ReturnType<typeof setInterval> | null = null
+function stopStatusPoll() {
+  if (statusTimer) { clearInterval(statusTimer); statusTimer = null }
+}
+async function pollUpdateStatus() {
+  try {
+    const raw = await invoke<string>('get_update_status')
+    const info = JSON.parse(raw)
+    // 下载失败:updater 退出非0、不终止主程序,这里弹错并恢复,用户可重试
+    if (info?.phase === 'error') {
+      stopStatusPoll()
+      updating.value = false
+      toastError(info?.message || t('settings.updateFailed'))
+    }
+    // 'downloading' / 'ready' → 继续转圈;主程序随后被 updater 终止,本组件随进程销毁
+  } catch {
+    // 状态文件尚未就绪等瞬时情况,忽略,继续轮询
+  }
+}
+async function confirmUpdate() {
+  updating.value = true
+  try {
+    await invoke('apply_update', { updaterUrl: pendingUpdaterUrl, versionUrl: UPDATE_URL })
+    toastInfo(t('settings.updateRestarting'))
+    stopStatusPoll()
+    statusTimer = setInterval(pollUpdateStatus, 1000)
+  } catch (err) {
+    console.error('[Settings] 启动更新失败', err)
+    toastError(t('settings.updateFailed'))
+    updating.value = false
+  }
+}
+
+onBeforeUnmount(stopStatusPoll)
 
 // —— 市场：列表只读展示 + 删除；「添加市场」弹窗填完即添加提交，无保存按钮 ——
 const showAddMarket = ref(false)
@@ -513,6 +608,20 @@ function onLocaleChange(value: string) {
   width: 160px;
   min-width: 160px;
   flex-shrink: 0;
+}
+
+.update-spinner {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  border: 2px solid var(--line-color);
+  border-top-color: var(--accent-color, #4f7cff);
+  border-radius: 50%;
+  animation: update-spin 0.8s linear infinite;
+}
+
+@keyframes update-spin {
+  to { transform: rotate(360deg); }
 }
 
 .settings-body {
