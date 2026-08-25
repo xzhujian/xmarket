@@ -28,6 +28,7 @@ fn main() {
                 "get_app_defaults",
                 "apply_update",
                 "get_update_status",
+                "fetch_version_json",
             ]),
         ),
     )

@@ -292,7 +292,7 @@
                     <SvgIcon name="about" :size="16" :style="{ color: 'var(--disabled-color)' }" />
                     {{ $t('about.version') }}
                   </span>
-                  <span :style="{ color: 'var(--text-color)' }">0.1.0</span>
+                  <span :style="{ color: 'var(--text-color)' }">{{ version }}</span>
                 </div>
                 <div class="flex justify-between py-2.5" :style="{ borderBottom: '1px solid var(--line-color)' }">
                   <span class="flex items-center gap-2">
@@ -369,6 +369,10 @@ import { UPDATE_URL } from '@/constants/update'
 const { locale, t } = useI18n()
 const appStore = useAppStore()
 
+// 当前安装版本(自升级,显示真实版本号而非写死)
+const version = ref('')
+getVersion().then((v) => { version.value = v }).catch(() => { version.value = '-' })
+
 // 同步 Pinia store 的 locale 到 vue-i18n（主窗口或配置文件变更时生效）
 watch(() => appStore.locale, (val) => { locale.value = val }, { immediate: true })
 
@@ -409,9 +413,9 @@ let pendingUpdaterUrl = ''
 async function checkForUpdate() {
   checking.value = true
   try {
-    const res = await fetch(UPDATE_URL)
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const info = await res.json()
+    // 不走 fetch:跨域到 Gitee raw 会被浏览器 CORS 拦截,统一走 Rust 侧 ureq 拉取
+    const raw = await invoke<string>('fetch_version_json', { versionUrl: UPDATE_URL })
+    const info = JSON.parse(raw)
     if (!info?.version || !info?.url || !info?.updaterUrl) throw new Error('version.json 格式错误')
     const current = await getVersion()
     if (compareVersions(info.version, current) <= 0) {

@@ -66,6 +66,7 @@ pub fn run() {
             // ── 自升级 ──
             updater::apply_update,
             updater::get_update_status,
+            updater::fetch_version_json,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

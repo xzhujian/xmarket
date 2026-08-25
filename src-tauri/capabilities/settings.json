@@ -25,6 +25,9 @@
     "allow-save-icon",
     "allow-get-app-icon",
     "allow-delete-icon",
-    "allow-get-app-defaults"
+    "allow-get-app-defaults",
+    "allow-fetch-version-json",
+    "allow-apply-update",
+    "allow-get-update-status"
   ]
 }

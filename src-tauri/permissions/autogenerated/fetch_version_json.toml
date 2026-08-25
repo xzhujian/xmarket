@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-fetch-version-json"
+description = "Enables the fetch_version_json command without any pre-configured scope."
+commands.allow = ["fetch_version_json"]
+
+[[permission]]
+identifier = "deny-fetch-version-json"
+description = "Denies the fetch_version_json command without any pre-configured scope."
+commands.deny = ["fetch_version_json"]
