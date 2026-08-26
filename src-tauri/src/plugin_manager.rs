@@ -22,9 +22,14 @@ pub struct PluginManifest {
     /// 插件图标文件名(icon.svg/png...)；缺省为空串，前端用默认占位图标
     #[serde(default)]
     pub icon: String,
-    #[serde(default = "default_display")]
-    pub display: String,
+    /// 页面打开方式：inline / window / fullscreen / select，缺省 inline
+    #[serde(default = "default_open_mode", rename = "openMode")]
+    pub open_mode: String,
+    #[serde(default)]
     pub entry: ManifestEntry,
+    /// 来源市场地址(市场安装时宿主注入)；缺省/为 null = 本地插件
+    #[serde(default)]
+    pub source: Option<String>,
     #[serde(default)]
     pub host: String,
     #[serde(default)]
@@ -38,19 +43,33 @@ pub struct PluginManifest {
     pub keep_alive: bool,
 }
 
-fn default_display() -> String {
-    "default".to_string()
+fn default_open_mode() -> String {
+    "inline".to_string()
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Default)]
 pub struct ManifestEntry {
+    /// 入口类型：frontend / server / app / backend，缺省 frontend
+    #[serde(default = "default_entry_type", rename = "type")]
+    pub entry_type: String,
+    /// 本地入口文件(相对插件目录)，frontend 用
     #[serde(default)]
-    pub frontend: String,
-    /// 网络型插件：直接指定远程入口 URL，打开插件即打开该地址
+    pub html: String,
+    /// 远程入口 URL(有值则打开插件即打开该地址，优先于 html)
     #[serde(default)]
     pub url: Option<String>,
+    /// 启动命令(server 型插件用，宿主执行以启动本地服务器)
+    #[serde(default)]
+    pub command: String,
+    /// 固定端口(server 型插件用，宿主打开 127.0.0.1:<port>)
+    #[serde(default)]
+    pub port: Option<u16>,
     #[serde(default)]
     pub backend: Option<ManifestBackend>,
+}
+
+fn default_entry_type() -> String {
+    "frontend".to_string()
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -79,11 +98,20 @@ pub struct PluginItem {
     pub icon_path: Option<String>,
     pub enabled: bool,
     pub sort_order: i32,
-    pub display: String,
+    /// 页面打开方式：inline / window / fullscreen / select
+    pub open_mode: String,
     pub entry_html: String,
     pub has_backend: bool,
     /// 网络型插件的远程入口 URL(有值则打开插件即打开该地址,否则用本地 entry_html)
     pub entry_url: Option<String>,
+    /// 入口类型：frontend / server / app / backend
+    pub entry_type: String,
+    /// server 型插件的启动命令
+    pub entry_command: String,
+    /// server 型插件的固定端口
+    pub entry_port: Option<u16>,
+    /// 插件来源市场地址(本地插件为 None)
+    pub source: Option<String>,
     /// 常驻运行：离开插件页后是否保留运行
     pub keep_alive: bool,
     /// 安装该插件时来自哪个市场地址（本地安装为 None）
@@ -311,7 +339,7 @@ fn scan_single_plugin(_app: &AppHandle, plugin_dir: &Path, state: &HashMap<Strin
     let plugin_id = manifest.id.clone();
     let plugin_state = state.get(&plugin_id).cloned().unwrap_or_default();
 
-    let entry_html = PathBuf::from(&manifest.entry.frontend);
+    let entry_html = PathBuf::from(&manifest.entry.html);
     let full_entry = plugin_dir.join(&entry_html);
 
     let icon_rel = manifest.icon;
@@ -331,10 +359,14 @@ fn scan_single_plugin(_app: &AppHandle, plugin_dir: &Path, state: &HashMap<Strin
         icon_path,
         enabled: plugin_state.enabled,
         sort_order: plugin_state.sort_order,
-        display: manifest.display,
+        open_mode: manifest.open_mode,
         entry_html: full_entry.to_string_lossy().to_string(),
         has_backend: manifest.entry.backend.is_some(),
         entry_url: manifest.entry.url,
+        entry_type: manifest.entry.entry_type,
+        entry_command: manifest.entry.command,
+        entry_port: manifest.entry.port,
+        source: manifest.source,
         keep_alive: manifest.keep_alive,
         source_market: plugin_state.source_market,
     })

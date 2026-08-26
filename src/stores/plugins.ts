@@ -14,11 +14,20 @@ export interface PluginItem {
   iconPath: string | null
   enabled: boolean
   sortOrder: number
-  display: string
+  /** 页面打开方式：inline / window / fullscreen / select */
+  openMode: string
   entryHtml: string
   /** 网络型插件的远程入口 URL（有值则打开插件即打开该地址） */
   entryUrl: string | null
   hasBackend: boolean
+  /** 入口类型：frontend / server / app / backend */
+  entryType: string
+  /** server 型插件的启动命令 */
+  entryCommand: string
+  /** server 型插件的固定端口 */
+  entryPort: number | null
+  /** 插件来源市场地址（本地插件为 null） */
+  source: string | null
   /** 常驻运行：离开插件页后是否保留运行 */
   keepAlive: boolean
   /** 安装来源市场地址（本地安装为 null） */
