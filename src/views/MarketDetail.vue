@@ -39,6 +39,8 @@
             <span>v{{ plugin.version }}</span>
             <span v-if="plugin.author" class="dot">·</span>
             <span v-if="plugin.author" class="author">{{ plugin.author }}</span>
+            <span v-if="plugin.source" class="dot">·</span>
+            <span v-if="plugin.source" class="source-badge">{{ plugin.source }}</span>
           </div>
           <div v-if="tags.length" class="tags">
             <span v-for="(t, i) in tags" :key="i" class="tag">{{ t }}</span>
@@ -53,43 +55,65 @@
         </button>
       </div>
 
-      <!-- 简介 -->
-      <section class="section">
-        <h2 class="section-title">{{ $t('market.detail_desc') }}</h2>
+      <!-- Tab 栏 -->
+      <div class="tabs">
+        <button
+          v-for="tab in tabs"
+          :key="tab.key"
+          class="tab-btn"
+          :class="{ active: activeTab === tab.key }"
+          @click="activeTab = tab.key"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <!-- Tab: 简介 -->
+      <div v-if="activeTab === 'intro'" class="tab-content">
         <p class="desc">{{ plugin.description || $t('home.no_desc') }}</p>
-      </section>
+      </div>
 
-      <!-- 详细信息 -->
-      <section class="section">
-        <h2 class="section-title">{{ $t('market.detail_info') }}</h2>
-        <dl class="info-list">
-          <div class="info-row">
-            <dt>{{ $t('market.detail_id') }}</dt>
-            <dd>{{ plugin.id }}</dd>
+      <!-- Tab: 详情 -->
+      <div v-if="activeTab === 'detail'" class="tab-content">
+        <div class="table-grid">
+          <div class="table-row">
+            <span class="table-label">{{ $t('market.detail_id') }}</span>
+            <span class="table-value">{{ plugin.id }}</span>
           </div>
-          <div class="info-row">
-            <dt>{{ $t('market.detail_version') }}</dt>
-            <dd>v{{ plugin.version }}</dd>
+          <div class="table-row">
+            <span class="table-label">{{ $t('market.detail_version') }}</span>
+            <span class="table-value">v{{ plugin.version }}</span>
           </div>
-          <div class="info-row">
-            <dt>{{ $t('market.detail_author') }}</dt>
-            <dd>{{ plugin.author || '—' }}</dd>
+          <div class="table-row">
+            <span class="table-label">{{ $t('market.detail_author') }}</span>
+            <span class="table-value">{{ plugin.author || '—' }}</span>
           </div>
-          <div class="info-row">
-            <dt>{{ $t('market.detail_file') }}</dt>
-            <dd>{{ plugin.file }}</dd>
+          <div v-if="plugin.source" class="table-row">
+            <span class="table-label">来源</span>
+            <span class="table-value">{{ plugin.source }}</span>
           </div>
-        </dl>
-      </section>
+          <div v-if="plugin.openMode" class="table-row">
+            <span class="table-label">打开方式</span>
+            <span class="table-value">{{ plugin.openMode }}</span>
+          </div>
+          <div v-if="plugin.host" class="table-row">
+            <span class="table-label">宿主版本</span>
+            <span class="table-value">{{ plugin.host }}</span>
+          </div>
+          <div class="table-row">
+            <span class="table-label">{{ $t('market.detail_file') }}</span>
+            <span class="table-value break-all">{{ plugin.file }}</span>
+          </div>
+        </div>
+      </div>
 
-      <!-- 占位：截图 / 更新日志 -->
-      <section class="section">
-        <h2 class="section-title">{{ $t('market.detail_media') }}</h2>
+      <!-- Tab: 截图 -->
+      <div v-if="activeTab === 'media'" class="tab-content">
         <div class="placeholder">
           <SvgIcon name="image" :size="22" :style="{ color: 'var(--disabled-color)' }" />
           <span>{{ $t('market.detail_media_empty') }}</span>
         </div>
-      </section>
+      </div>
     </template>
   </div>
 </template>
@@ -98,7 +122,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { invoke } from '@tauri-apps/api/core'
 import { usePluginStore } from '@/stores/plugins'
 import { compareVersions } from '@/utils/version'
 import SvgIcon from '@/components/SvgIcon.vue'
@@ -114,6 +137,9 @@ interface DetailPlugin {
   iconUrl?: string | null
   downloadUrl?: string | null
   tag?: string | string[]
+  source?: string | null
+  openMode?: string
+  host?: string
 }
 
 const route = useRoute()
@@ -128,12 +154,18 @@ type Status = 'loading' | 'error' | 'ok'
 const status = ref<Status>('loading')
 const plugin = ref<DetailPlugin | null>(null)
 const installing = ref(false)
+const activeTab = ref('intro')
+
+const tabs = computed(() => [
+  { key: 'intro', label: t('market.tab_intro') },
+  { key: 'detail', label: t('market.tab_detail') },
+  { key: 'media', label: t('market.tab_media') },
+])
 
 const installed = computed(() =>
   plugin.value ? pluginStore.plugins.some(p => p.id === plugin.value?.id) : false,
 )
 
-/** 市场版本严格高于已装版本 → 可升级 */
 const upgrade = computed(() => {
   const p = plugin.value
   if (!p) return false
@@ -156,7 +188,10 @@ async function onInstall() {
   }
 }
 
-const iconUrl = computed(() => (plugin.value?.iconUrl ? marketUrl.value + plugin.value.iconUrl : ''))
+const iconUrl = computed(() =>
+  plugin.value?.iconUrl ? marketUrl.value + plugin.value.iconUrl : ''
+)
+
 const tags = computed<string[]>(() => {
   const t = plugin.value?.tag
   if (!t) return []
@@ -164,6 +199,10 @@ const tags = computed<string[]>(() => {
 })
 
 async function load() {
+  if (!marketUrl.value) {
+    status.value = 'error'
+    return
+  }
   status.value = 'loading'
   try {
     const res = await fetch(`${marketUrl.value}/plugins/${id.value}`)
@@ -177,7 +216,6 @@ async function load() {
 }
 
 function goBack() {
-  // 直接打开详情页（无历史）时回市场；否则正常返回上一页
   if (window.history.state?.back) router.back()
   else router.push('/plugins')
 }
@@ -196,6 +234,8 @@ onMounted(load)
 <style lang="scss" scoped>
 .detail-page {
   padding: 24px 28px 40px;
+  max-width: 780px;
+  margin: 0 auto;
 }
 
 // —— 顶部条 ——
@@ -218,7 +258,7 @@ onMounted(load)
   padding: 26px 28px; border-radius: 18px;
   background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.12), rgba(var(--accent-rgb), 0.03));
   border: 1px solid color-mix(in srgb, var(--accent-color) 20%, transparent);
-  margin-bottom: 26px;
+  margin-bottom: 20px;
 
   .hero-icon {
     width: 84px; height: 84px; flex-shrink: 0;
@@ -237,6 +277,12 @@ onMounted(load)
     display: flex; align-items: center; gap: 6px;
     margin-top: 6px; font-size: 13px; color: var(--disabled-color);
     .dot { color: var(--line-color); }
+  }
+  .source-badge {
+    display: inline-block; padding: 1px 8px; border-radius: 999px;
+    font-size: 11px; line-height: 1.6;
+    color: var(--accent-color); background: rgba(var(--accent-rgb), 0.1);
+    border: 1px solid color-mix(in srgb, var(--accent-color) 30%, transparent);
   }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
   .tag {
@@ -262,37 +308,60 @@ onMounted(load)
   }
 }
 
-// —— 分区 ——
-.section { margin-bottom: 26px; }
-.section-title {
-  margin: 0 0 12px; font-size: 15px; font-weight: 600; color: var(--text-color);
-  &::before { content: ''; display: inline-block; width: 3px; height: 14px; margin-right: 8px; border-radius: 2px; vertical-align: -2px; background: var(--accent-color); }
+// —— Tab 栏 ——
+.tabs {
+  display: flex; gap: 0; margin-bottom: 20px;
+  border-bottom: 1px solid var(--line-color);
+}
+.tab-btn {
+  flex: 0 0 auto; padding: 10px 20px;
+  font-size: 14px; font-weight: 500;
+  color: var(--disabled-color); background: transparent;
+  border: none; border-bottom: 2px solid transparent;
+  cursor: pointer; transition: all 0.2s ease;
+  &:hover { color: var(--text-color); }
+  &.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--accent-color);
+  }
 }
 
+// —— Tab 内容 ——
+.tab-content {
+  min-height: 120px;
+}
+
+// —— 简介 ——
 .desc {
   margin: 0; font-size: 14px; line-height: 1.7;
   color: color-mix(in srgb, var(--text-color) 82%, transparent);
   white-space: pre-wrap; word-break: break-word;
 }
 
-.info-list {
-  margin: 0; border: 1px solid var(--line-color); border-radius: 12px; overflow: clip;
-  .info-row {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    padding: 12px 16px; font-size: 13px;
-    & + .info-row { border-top: 1px solid var(--line-color); }
-    dt { color: var(--disabled-color); flex-shrink: 0; }
-    dd { margin: 0; color: var(--text-color); word-break: break-all; text-align: right; }
-  }
+// —— 详情表格 ——
+.table-grid {
+  border: 1px solid var(--line-color); border-radius: 12px; overflow: clip;
+}
+.table-row {
+  display: flex; align-items: center; justify-content: flex-start; gap: 20px;
+  padding: 12px 16px; font-size: 13px;
+  & + .table-row { border-top: 1px solid var(--line-color); }
+}
+.table-label {
+  flex: 0 0 100px; color: var(--disabled-color); flex-shrink: 0;
+}
+.table-value {
+  flex: 1; color: var(--text-color); word-break: break-all; text-align: left;
 }
 
+// —— 媒体占位 ——
 .placeholder {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
   padding: 36px 0; border: 1px dashed var(--line-color); border-radius: 12px;
   font-size: 13px; color: var(--disabled-color);
 }
 
-// —— 状态 ——
+// —— 错误状态 ——
 .state-box {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 12px; padding: 80px 0;
@@ -302,8 +371,6 @@ onMounted(load)
     animation: spin 0.8s linear infinite;
   }
 }
-
-// —— EmptyState 里的重试按钮 ——
 .retry-btn {
   margin-top: 16px;
   padding: 7px 20px; border-radius: 999px; font-size: 13px; cursor: pointer;

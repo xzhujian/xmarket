@@ -51,12 +51,16 @@
               <span class="text-xs" :style="{ color: 'var(--disabled-color)' }">v{{ plugin.version }}</span>
               <span v-if="plugin.author" class="text-xs" :style="{ color: 'var(--disabled-color)' }">by {{ plugin.author }}</span>
               <span v-if="plugin.hasBackend" class="text-xs px-1.5 py-0.5 rounded" style="background: #8b5cf622; color: #8b5cf6">含原生后端</span>
+              <span v-if="plugin.source" class="source-tag">{{ plugin.source }}</span>
             </div>
           </div>
         </div>
         <div class="flex items-center gap-2">
           <TButton variant="text" icon="share" :title="$t('market.share')" @click="packPlugin(plugin)">
             {{ $t('market.share') }}
+          </TButton>
+          <TButton v-if="plugin.source" variant="text" @click="goDetail(plugin)">
+            {{ $t('market.details') }}
           </TButton>
           <TButton
             :variant="plugin.enabled ? 'outline' : 'accent'"
@@ -103,8 +107,10 @@ import EmptyState from '@/components/EmptyState.vue'
 import Loading from '@/components/Loading.vue'
 import TButton from '@/components/form/TButton.vue'
 import { useToast } from '@/composables/useToast'
+import { useRouter } from 'vue-router'
 
 const pluginStore = usePluginStore()
+const router = useRouter()
 const loading = ref(false)
 const spinning = ref(false)
 const uninstallTarget = ref<PluginItem | null>(null)
@@ -149,6 +155,11 @@ function onRefresh() {
   spinning.value = true
   loadPlugins()
   setTimeout(() => { spinning.value = false }, 600)
+}
+
+function goDetail(plugin: PluginItem) {
+  if (!plugin.source) return
+  router.push(`/market/${plugin.id}?url=${encodeURIComponent(plugin.source)}`)
 }
 
 onMounted(() => {
@@ -243,6 +254,13 @@ async function doUninstall() {
   padding: 2px;
   border-radius: 4px;
   &:active { cursor: grabbing; }
+}
+.source-tag {
+  display: inline-block; padding: 1px 7px; border-radius: 999px;
+  font-size: 11px; line-height: 1.6;
+  color: var(--accent-color); background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid color-mix(in srgb, var(--accent-color) 30%, transparent);
+  margin-left: 6px;
 }
 .spinning :deep(.tbtn-icon) {
   animation: spin 0.6s ease-in-out;

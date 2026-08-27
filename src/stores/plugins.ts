@@ -30,8 +30,6 @@ export interface PluginItem {
   source: string | null
   /** 常驻运行：离开插件页后是否保留运行 */
   keepAlive: boolean
-  /** 安装来源市场地址（本地安装为 null） */
-  sourceMarket: string | null
   /** 插件自带图标（icon.svg/png...）经虚拟主机解析后的 URL，无图标时为 null */
   iconUrl: string | null
 }
@@ -54,10 +52,10 @@ export const usePluginStore = defineStore('plugin', () => {
     }
   }
 
-  /** 安装插件（解压 zip）。marketUrl 为来源市场地址，升级时用于更新 sourceMarket */
-  async function installPlugin(zipPath: string, marketUrl?: string | null): Promise<PluginItem | null> {
+  /** 安装插件（解压 zip） */
+  async function installPlugin(zipPath: string): Promise<PluginItem | null> {
     try {
-      const plugin = await invoke<PluginItem>('install_plugin', { zipPath, marketUrl: marketUrl ?? null })
+      const plugin = await invoke<PluginItem>('install_plugin', { zipPath })
       plugin.iconUrl = resolveIconUrl(plugin)
       const runtime = useRuntimeStore()
       // 若该插件已装（升级/重装）且窗口开着，先关掉，避免残留指向旧目录的 webview
@@ -75,14 +73,14 @@ export const usePluginStore = defineStore('plugin', () => {
     }
   }
 
-  /** 从市场安装插件：下载 zip → 落临时文件 → 复用 install_plugin 解压安装（带上来源市场地址） */
+  /** 从市场安装插件：下载 zip → 落临时文件 → 解压安装 */
   async function installMarketPlugin(marketUrl: string, p: { id: string; downloadUrl?: string | null }) {
     if (!p.downloadUrl) throw new Error('该插件没有下载地址')
     const res = await fetch(marketUrl + p.downloadUrl)
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const bytes = await res.arrayBuffer()
     const zipPath = await invoke<string>('save_market_zip', { filename: `${p.id}.zip`, bytes })
-    return installPlugin(zipPath, marketUrl)
+    return installPlugin(zipPath)
   }
 
   /** 打包插件为 zip */

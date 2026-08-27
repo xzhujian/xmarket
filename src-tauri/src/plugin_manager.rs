@@ -114,8 +114,6 @@ pub struct PluginItem {
     pub source: Option<String>,
     /// 常驻运行：离开插件页后是否保留运行
     pub keep_alive: bool,
-    /// 安装该插件时来自哪个市场地址（本地安装为 None）
-    pub source_market: Option<String>,
 }
 
 /// 插件状态（持久化到 SQLite）
@@ -126,8 +124,6 @@ pub struct PluginState {
     pub is_default_page: bool,
     pub sort_order: i32,
     pub display_mode: String,
-    /// 安装来源市场地址（本地安装为 None）
-    pub source_market: Option<String>,
 }
 
 impl Default for PluginState {
@@ -138,7 +134,6 @@ impl Default for PluginState {
             is_default_page: false,
             sort_order: 0,
             display_mode: "default".to_string(),
-            source_market: None,
         }
     }
 }
@@ -152,7 +147,6 @@ struct PluginStateRow {
     is_default_page: bool,
     sort_order: i32,
     display_mode: String,
-    source_market: Option<String>,
 }
 
 impl From<PluginStateRow> for PluginState {
@@ -163,7 +157,6 @@ impl From<PluginStateRow> for PluginState {
             is_default_page: r.is_default_page,
             sort_order: r.sort_order,
             display_mode: r.display_mode,
-            source_market: r.source_market,
         }
     }
 }
@@ -231,26 +224,13 @@ pub fn init_db(app: &AppHandle) -> Result<(), String> {
                 show_on_home    INTEGER NOT NULL DEFAULT 0,
                 is_default_page INTEGER NOT NULL DEFAULT 0,
                 sort_order      INTEGER NOT NULL DEFAULT 0,
-                display_mode    TEXT NOT NULL DEFAULT 'default',
-                source_market   TEXT
+                display_mode    TEXT NOT NULL DEFAULT 'default'
             )",
         )
         .execute(&pool),
     )
     .map_err(|e| format!("创建插件状态表失败: {}", e))?;
 
-    // 老库迁移：补上后续新增的 source_market 列（已存在则忽略，不算错误）
-    let migrate_res = tauri::async_runtime::block_on(
-        sqlx::query(
-            "ALTER TABLE plugin_states ADD COLUMN source_market TEXT",
-        )
-        .execute(&pool),
-    );
-    if let Err(e) = migrate_res {
-        if !e.to_string().to_lowercase().contains("duplicate column") {
-            return Err(format!("迁移插件状态表失败: {}", e));
-        }
-    }
     app.manage(Db(pool));
     Ok(())
 }
@@ -263,7 +243,7 @@ fn get_pool(app: &AppHandle) -> SqlitePool {
 /// 读取某插件状态（不存在则返回默认）
 async fn get_state(pool: &SqlitePool, id: &str) -> Result<PluginState, String> {
     let row = sqlx::query_as::<_, PluginStateRow>(
-        "SELECT plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode, source_market
+        "SELECT plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode
          FROM plugin_states WHERE plugin_id = ?",
     )
     .bind(id)
@@ -276,7 +256,7 @@ async fn get_state(pool: &SqlitePool, id: &str) -> Result<PluginState, String> {
 /// 读取全部插件状态
 async fn load_all_states(pool: &SqlitePool) -> Result<HashMap<String, PluginState>, String> {
     let rows = sqlx::query_as::<_, PluginStateRow>(
-        "SELECT plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode, source_market
+        "SELECT plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode
          FROM plugin_states",
     )
     .fetch_all(pool)
@@ -292,15 +272,14 @@ async fn load_all_states(pool: &SqlitePool) -> Result<HashMap<String, PluginStat
 async fn upsert_state(pool: &SqlitePool, id: &str, state: &PluginState) -> Result<(), String> {
     sqlx::query(
         "INSERT INTO plugin_states
-           (plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode, source_market)
-         VALUES (?, ?, ?, ?, ?, ?, ?)
+           (plugin_id, enabled, show_on_home, is_default_page, sort_order, display_mode)
+         VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT(plugin_id) DO UPDATE SET
            enabled = excluded.enabled,
            show_on_home = excluded.show_on_home,
            is_default_page = excluded.is_default_page,
            sort_order = excluded.sort_order,
-           display_mode = excluded.display_mode,
-           source_market = excluded.source_market",
+           display_mode = excluded.display_mode",
     )
     .bind(id)
     .bind(state.enabled)
@@ -308,7 +287,6 @@ async fn upsert_state(pool: &SqlitePool, id: &str, state: &PluginState) -> Resul
     .bind(state.is_default_page)
     .bind(state.sort_order)
     .bind(&state.display_mode)
-    .bind(&state.source_market)
     .execute(pool)
     .await
     .map_err(|e| format!("写入插件状态失败: {}", e))?;
@@ -368,7 +346,6 @@ fn scan_single_plugin(_app: &AppHandle, plugin_dir: &Path, state: &HashMap<Strin
         entry_port: manifest.entry.port,
         source: manifest.source,
         keep_alive: manifest.keep_alive,
-        source_market: plugin_state.source_market,
     })
 }
 
@@ -417,13 +394,11 @@ pub fn save_market_zip(filename: String, bytes: Vec<u8>) -> Result<String, Strin
     Ok(path.to_string_lossy().to_string())
 }
 
-/// 安装插件（解压 zip）。market_url 为来源市场地址（本地安装可不传），
-/// 全新安装排到列表末尾并启用；升级/重装保留原排序与状态、仅更新来源市场。
+/// 安装插件（解压 zip）。全新安装排到列表末尾并启用；升级/重装保留原排序与状态。
 #[tauri::command]
 pub async fn install_plugin(
     app: AppHandle,
     zip_path: String,
-    market_url: Option<String>,
 ) -> Result<PluginItem, String> {
     let zip_path = PathBuf::from(&zip_path);
     if !zip_path.exists() {
@@ -527,19 +502,16 @@ pub async fn install_plugin(
         }
     }
 
-    // 更新状态：全新安装排末尾并启用；升级保留原排序/状态，仅更新来源市场
+    // 更新状态：全新安装排末尾并启用；升级保留原排序/状态
     let pool = get_pool(&app);
     let states = load_all_states(&pool).await?;
     let new_state = if let Some(existing) = states.get(&plugin_id) {
-        let mut s = existing.clone();
-        s.source_market = market_url;
-        s
+        existing.clone()
     } else {
         let max_order = states.values().map(|s| s.sort_order).max().unwrap_or(-1);
         PluginState {
             enabled: true,
             sort_order: max_order + 1,
-            source_market: market_url,
             ..Default::default()
         }
     };
