@@ -167,5 +167,17 @@
     "type_title": "插件类型",
     "market_desc": "更多插件即将上线，敬请期待",
     "browse": "去逛逛"
+  },
+  "pluginOpenMode": {
+    "title": "选择打开方式",
+    "subtitle": "打开「{name}」之前，请选择它以哪种方式打开",
+    "inline": "内嵌",
+    "inline_desc": "嵌入主界面，作为标签页使用",
+    "window": "独立窗口",
+    "window_desc": "独立拖动窗口，与主界面互不影响",
+    "fullscreen": "全屏",
+    "fullscreen_desc": "独立窗口，同时隐藏主界面",
+    "select": "由用户选择",
+    "back": "返回"
   }
 }

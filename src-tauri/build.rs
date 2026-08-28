@@ -15,6 +15,8 @@ fn main() {
                 "get_plugin_server_url",
                 "get_plugin_icon_url",
                 "create_plugin_webview",
+                "create_plugin_window",
+                "restore_main_window",
                 "read_config",
                 "write_config",
                 "read_window_state",

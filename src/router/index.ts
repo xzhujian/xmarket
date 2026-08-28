@@ -8,6 +8,7 @@ const router = createRouter({
     { path: '/', name: 'home', component: Home, meta: { title: 'nav.home' } },
     { path: '/plugins', name: 'plugins', component: () => import('@/views/Plugins.vue'), meta: { title: 'nav.plugins' } },
     { path: '/messages', name: 'messages', component: () => import('@/views/Messages.vue'), meta: { title: 'nav.messages' } },
+    { path: '/plugin/:id/pick', name: 'plugin-pick', component: () => import('@/views/OpenModePick.vue'), meta: { title: 'pluginOpenMode.title' } },
     { path: '/plugin/:id', name: 'plugin', component: () => import('@/views/PluginHost.vue'), meta: { title: '插件' } },
     { path: '/market/:id', name: 'market-detail', component: () => import('@/views/MarketDetail.vue'), meta: { title: 'market.detail_title' } },
     {

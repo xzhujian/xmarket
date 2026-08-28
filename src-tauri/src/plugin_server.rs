@@ -334,3 +334,79 @@ pub async fn create_plugin_webview(
     .map(|_| ())
     .map_err(|e| format!("创建插件 webview 失败: {e}"))
 }
+
+/// 打开插件为独立窗口（openMode: window / fullscreen）。
+///
+/// 与内嵌子 webview 保持一致的权限与行为：plugins-capability 按窗口 label
+/// `plugin-window-*` 匹配（webviews 的 plugin-page-* 规则不动），并同样注入
+/// 右键菜单脚本 + 禁用原生拖拽。窗口重复打开时只显示/聚焦，防双开。
+///
+/// 注：名为 fullscreen，实际并非全屏窗口 —— 统一以普通独立窗口弹出，
+/// fullscreen 与 window 形态仅差在是否隐藏主窗口。主窗口的恢复由
+/// 前端在插件窗口关闭时调 restore_main_window。
+#[tauri::command]
+pub async fn create_plugin_window(
+    app: AppHandle,
+    plugin_id: String,
+    url: String,
+    title: String,
+    fullscreen: bool,
+) -> Result<(), String> {
+    use tauri::{WebviewUrl, WebviewWindowBuilder};
+
+    let label = format!("plugin-window-{plugin_id}");
+
+    if let Some(existing) = app.get_webview_window(&label) {
+        let _ = existing.show();
+        let _ = existing.set_focus();
+        return Ok(());
+    }
+
+    let wv_url = if let Ok(u) = url.parse::<tauri::Url>() {
+        WebviewUrl::External(u)
+    } else {
+        WebviewUrl::App(url.into())
+    };
+
+    WebviewWindowBuilder::new(&app, &label, wv_url)
+        .title(&title)
+        .initialization_script(PLUGIN_CONTEXT_MENU_SCRIPT)
+        .disable_drag_drop_handler()
+        .inner_size(1000.0, 700.0)
+        .center()
+        .build()
+        .map_err(|e| format!("创建插件窗口失败: {e}"))?;
+
+    // fullscreen 形态：隐藏主窗口（连同其 plugin-page-* 子 webview）。
+    // 子 webview 是独立原生窗口，父窗口隐藏不会自动跟随，需手动一起隐藏。
+    if fullscreen {
+        if let Some(main) = app.get_window("main") {
+            for wv in main.webviews() {
+                if wv.label().starts_with("plugin-page-") {
+                    let _ = wv.hide();
+                }
+            }
+            let _ = main.hide();
+        }
+    }
+    Ok(())
+}
+
+/// 恢复主窗口显示（fullscreen 插件窗口关闭后调用）：
+/// 连同其 plugin-page-* 子 webview 一起 show，并还原最小化状态。
+#[tauri::command]
+pub fn restore_main_window(app: AppHandle) -> Result<(), String> {
+    if let Some(main) = app.get_window("main") {
+        if main.is_minimized().unwrap_or(false) {
+            let _ = main.unminimize();
+        }
+        let _ = main.show();
+        for wv in main.webviews() {
+            if wv.label().starts_with("plugin-page-") {
+                let _ = wv.show();
+            }
+        }
+        let _ = main.set_focus();
+    }
+    Ok(())
+}

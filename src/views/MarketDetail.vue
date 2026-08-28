@@ -94,7 +94,7 @@
           </div>
           <div v-if="plugin.openMode" class="table-row">
             <span class="table-label">打开方式</span>
-            <span class="table-value">{{ plugin.openMode }}</span>
+            <span class="table-value">{{ openModeLabel }}</span>
           </div>
           <div v-if="plugin.host" class="table-row">
             <span class="table-label">宿主版本</span>
@@ -196,6 +196,13 @@ const tags = computed<string[]>(() => {
   const t = plugin.value?.tag
   if (!t) return []
   return Array.isArray(t) ? t : [t]
+})
+
+const OPEN_MODE_KEYS = ['inline', 'window', 'fullscreen', 'select']
+const openModeLabel = computed(() => {
+  const m = plugin.value?.openMode
+  if (!m) return ''
+  return OPEN_MODE_KEYS.includes(m) ? t(`pluginOpenMode.${m}`) : m
 })
 
 async function load() {

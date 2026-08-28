@@ -331,11 +331,9 @@
               <span class="update-spinner" />
               <span class="text-sm" :style="{ color: 'var(--text-color)' }">{{ $t('settings.updateRestarting') }}</span>
             </div>
-            <template #footer>
-              <template v-if="!updating">
-                <TButton variant="outline" @click="updateModal = false">{{ $t('common.cancel') }}</TButton>
-                <TButton variant="accent" @click="confirmUpdate">{{ $t('common.confirm') }}</TButton>
-              </template>
+            <template v-if="!updating" #footer>
+              <TButton variant="outline" @click="updateModal = false">{{ $t('common.cancel') }}</TButton>
+              <TButton variant="accent" @click="confirmUpdate">{{ $t('common.confirm') }}</TButton>
             </template>
           </TModal>
         </div>

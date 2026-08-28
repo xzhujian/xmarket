@@ -167,5 +167,17 @@
     "type_title": "Plugin type",
     "market_desc": "More plugins coming soon",
     "browse": "Explore"
+  },
+  "pluginOpenMode": {
+    "title": "Choose how to open",
+    "subtitle": "Before opening “{name}”, choose how it opens",
+    "inline": "Embedded",
+    "inline_desc": "Embed in the main UI as a tab",
+    "window": "Standalone window",
+    "window_desc": "Draggable window, independent of the main UI",
+    "fullscreen": "Fullscreen",
+    "fullscreen_desc": "Standalone window that hides the main UI",
+    "select": "Ask each time",
+    "back": "Back"
   }
 }

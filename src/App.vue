@@ -49,7 +49,9 @@ import { computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { usePluginStore } from '@/stores/plugins'
+import { useRuntimeStore } from '@/stores/runtime'
 import { useI18n } from 'vue-i18n'
+import { onEvent } from '@/services/ipc'
 import Layout1 from '@/layouts/Layout1.vue'
 import Layout2 from '@/layouts/Layout2.vue'
 import Layout3 from '@/layouts/Layout3.vue'
@@ -69,6 +71,9 @@ const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
 const pluginStore = usePluginStore()
+const runtime = useRuntimeStore()
+let unlistenPluginExit: (() => void) | null = null
+let unlistenWindowClosed: (() => void) | null = null
 
 const layoutMap: Record<string, any> = {
   '1': Layout1,
@@ -105,8 +110,32 @@ onMounted(async () => {
   // 主窗口启动时恢复上次的位置与大小(子窗口 /window 跳过)
   if (!isWindowRoute.value) {
     await restoreWindowState()
+    // 插件生命周期事件（子窗口 /window 不注册，避免重复处理）
+    onEvent<string>('plugin-exit', (pid) => { void handlePluginExit(pid) })
+      .then((fn) => { unlistenPluginExit = fn })
+      .catch(() => {})
+    onEvent<string>('plugin-window-closed', (pid) => { handlePluginWindowClosed(pid) })
+      .then((fn) => { unlistenWindowClosed = fn })
+      .catch(() => {})
   }
 })
+
+// 插件请求退出：内嵌形态关掉 webview 并跳回插件列表页；独立窗口形态关窗
+//（fullscreen 由 closeWindow 内部顺带恢复主窗口）
+async function handlePluginExit(pluginId: string) {
+  const win = runtime.windows[pluginId]
+  if (win && win.kind !== 'inline') {
+    await runtime.closeWindow(pluginId)
+  } else {
+    await runtime.closeWindow(pluginId)
+    if (route.path.startsWith(`/plugin/${pluginId}`)) router.push('/plugins')
+  }
+}
+
+// 插件独立窗口被用户直接关闭（点 X）：清理运行登记；恢复逻辑按 kind 在 closeWindow 内处理
+function handlePluginWindowClosed(pluginId: string) {
+  if (runtime.windows[pluginId]) void runtime.closeWindow(pluginId)
+}
 
 function blockRefresh(e: KeyboardEvent) {
   if (
@@ -120,6 +149,8 @@ function blockRefresh(e: KeyboardEvent) {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', blockRefresh, true)
+  unlistenPluginExit?.()
+  unlistenWindowClosed?.()
 })
 </script>
 

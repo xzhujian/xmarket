@@ -3,18 +3,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { usePluginStore } from '@/stores/plugins'
 import { usePluginWebview } from '@/composables/usePluginWebview'
-import { onEvent } from '@/services/ipc'
-import { invoke } from '@tauri-apps/api/core'
-import { useDebugStore } from '@/stores/debug'
+import { resolvePluginUrl } from '@/services/pluginUrl'
 
 const route = useRoute()
-const router = useRouter()
 const pluginStore = usePluginStore()
-const debug = useDebugStore()
 
 const containerRef = ref<HTMLElement | null>(null)
 const pluginView = usePluginWebview(containerRef)
@@ -26,20 +22,6 @@ const plugin = computed(() =>
 )
 
 const pluginUrl = ref('')
-let unlistenExit: (() => void) | null = null
-
-async function resolvePluginUrl(entryHtml: string, entryUrl: string | null): Promise<string> {
-  // 网络型插件：直接使用远程入口 URL
-  if (entryUrl) return entryUrl
-  try {
-    const url = await invoke<string>('get_plugin_server_url', { entryHtml })
-    debug.info(`[PluginHost] server URL → ${url}`)
-    return url
-  } catch (e) {
-    debug.error(`[PluginHost] resolve URL failed: ${e}`)
-    return ''
-  }
-}
 
 onMounted(async () => {
   if (!pluginStore.plugins.length) {
@@ -54,17 +36,6 @@ onMounted(async () => {
       await pluginView.open(pluginId.value, pluginUrl.value, plugin.value.keepAlive ?? false)
     }
   }
-
-  // 订阅后端转发的插件退出通知（方案B：插件调命令→后端emit→主窗口收→调功能）
-  onEvent<string>('plugin-exit', (pid) => {
-    debug.info(`[PluginHost] 插件请求退出: ${pid}`)
-    pluginView.close(pid)
-    router.push('/plugins')
-  }).then((fn) => { unlistenExit = fn }).catch(() => {})
-})
-
-onUnmounted(() => {
-  unlistenExit?.()
 })
 
 // 离开插件页面时关闭当前前台子 WebView：

@@ -34,8 +34,6 @@ pub struct PluginManifest {
     pub host: String,
     #[serde(default)]
     pub permissions: HashMap<String, Vec<String>>,
-    #[serde(default)]
-    pub default_config: Option<serde_json::Value>,
     pub homepage: Option<String>,
     pub license: Option<String>,
     /// 常驻运行：离开插件页后是否保留运行(默认 false=打开即开离开即关)
@@ -485,20 +483,6 @@ pub async fn install_plugin(
             out_file
                 .write_all(&buffer)
                 .map_err(|e| format!("写入文件失败: {}", e))?;
-        }
-    }
-
-    // 写入默认配置
-    if let Some(default_config) = &manifest.default_config {
-        let data_dir = get_plugins_data_dir(&app);
-        let plugin_data_dir = data_dir.join(&plugin_id);
-        fs::create_dir_all(&plugin_data_dir).ok();
-
-        let config_path = plugin_data_dir.join("config.json");
-        if !config_path.exists() {
-            if let Ok(json) = serde_json::to_string_pretty(default_config) {
-                fs::write(&config_path, &json).ok();
-            }
         }
     }
 

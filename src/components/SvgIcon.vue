@@ -51,6 +51,9 @@ const iconMap: Record<string, any> = {
   wrench: LucideIcons.Wrench,
   image: LucideIcons.Image,
   'grip-vertical': LucideIcons.GripVertical,
+  panels: LucideIcons.PanelsTopLeft,
+  window: LucideIcons.AppWindow,
+  fullscreen: LucideIcons.Maximize,
 }
 
 const iconComponent = computed(() => iconMap[props.name] || LucideIcons.HelpCircle)

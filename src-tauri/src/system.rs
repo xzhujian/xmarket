@@ -2,12 +2,15 @@ use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri::{Emitter, Manager};
 
-/// 关闭拦截：main 窗口收到关闭请求时阻止并通知前端按配置决策（隐藏/退出/弹窗）
+/// 关闭拦截：main 窗口收到关闭请求时阻止并通知前端按配置决策（隐藏/退出/弹窗）；
+/// plugin-window-*（插件独立窗口）允许正常关闭，并通知主窗口前端清理登记、恢复主窗口。
 pub fn on_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
     if let tauri::WindowEvent::CloseRequested { api, .. } = event {
         if window.label() == "main" {
             api.prevent_close();
             let _ = window.emit("close-requested", ());
+        } else if let Some(pid) = window.label().strip_prefix("plugin-window-") {
+            let _ = window.emit("plugin-window-closed", pid.to_string());
         }
     }
 }

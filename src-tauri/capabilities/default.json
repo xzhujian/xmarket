@@ -52,6 +52,8 @@
     "allow-get-plugin-server-url",
     "allow-get-plugin-icon-url",
     "allow-create-plugin-webview",
+    "allow-create-plugin-window",
+    "allow-restore-main-window",
     "allow-read-config",
     "allow-write-config",
     "allow-read-window-state",

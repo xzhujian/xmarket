@@ -1,13 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { Webview } from '@tauri-apps/api/webview'
+import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { LogicalPosition, LogicalSize } from '@tauri-apps/api/dpi'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/core'
 import { useDebugStore } from '@/stores/debug'
 
-/** 插件窗口形态。当前只实现内嵌子 webview；未来新增形态（如独立窗口）在此扩展 */
-export type PluginWindowKind = 'inline'
+/** 插件窗口形态：inline 内嵌子 webview；window/fullscreen 独立窗口 */
+export type PluginWindowKind = 'inline' | 'window' | 'fullscreen'
 /** 插件窗口显示态：active 前台 / suspended 模态临时隐藏 / hidden 常驻但离开页面 */
 export type PluginViewState = 'active' | 'suspended' | 'hidden'
 
@@ -182,6 +183,57 @@ async function execClose(key: string) {
   if (currentKey === key) currentKey = null
 }
 
+// ─── 独立窗口形态（openMode: window / fullscreen）物理执行层 ──────────
+
+const STANDALONE_PREFIX = 'plugin-window-'
+
+/** 创建/恢复独立插件窗口；fullscreen 形态由后端隐藏主窗口（窗口本身非全屏） */
+async function execOpenStandalone(pluginId: string, url: string, kind: 'window' | 'fullscreen', title: string) {
+  const debug = useDebugStore()
+  try {
+    await invoke('create_plugin_window', {
+      pluginId,
+      url,
+      title,
+      fullscreen: kind === 'fullscreen',
+    })
+  } catch (e) {
+    debug.error(`[Window] create standalone failed: ${e}`)
+  }
+}
+
+/** 隐藏独立插件窗口（常驻保留运行，不销毁）；fullscreen 形态同时恢复主窗口 */
+async function execHideStandalone(pluginId: string, wasFullscreen: boolean) {
+  const debug = useDebugStore()
+  try {
+    if (wasFullscreen) {
+      await invoke('restore_main_window')
+    }
+    const w = await WebviewWindow.getByLabel(`${STANDALONE_PREFIX}${pluginId}`)
+    if (w) {
+      await w.hide().catch(() => {})
+    }
+  } catch (e) {
+    debug.error(`[Window] hide standalone failed: ${e}`)
+  }
+}
+
+/** 关闭独立插件窗口；fullscreen 形态同时恢复主窗口（连同其子 webview） */
+async function execCloseStandalone(pluginId: string, wasFullscreen: boolean) {
+  const debug = useDebugStore()
+  try {
+    if (wasFullscreen) {
+      await invoke('restore_main_window')
+    }
+    const w = await WebviewWindow.getByLabel(`${STANDALONE_PREFIX}${pluginId}`)
+    if (w) {
+      await w.close().catch(() => {})
+    }
+  } catch (e) {
+    debug.error(`[Window] close standalone failed: ${e}`)
+  }
+}
+
 // ─── 插件窗口管理（响应式状态 + 统一编排）────────────────────
 
 /** 所有插件窗口状态变化的唯一入口/真相源。
@@ -195,33 +247,48 @@ export const useRuntimeStore = defineStore('runtime', () => {
   const windows = ref<Record<string, PluginWindow>>({})
   /** 当前前台插件窗口 id */
   const activeId = ref<string | null>(null)
+  /** 导航高亮选中的插件 id（点谁亮谁，独立于内嵌前台 activeId） */
+  const selectedPluginId = ref<string | null>(null)
 
-  /** 打开某插件窗口：切入启动。切走时——旧前台若是常驻(keepAlive)则隐藏保留，否则彻底关闭 */
+  /** 打开某插件窗口：切入启动。开新插件前统一清场——其它已开插件按 keepAlive 决定去留：
+   *  常驻(keepAlive) 隐藏保留（内嵌 hide webview / 独立 hide 窗口，fullscreen 形态先恢复主窗口）；
+   *  非常驻彻底关闭。目标插件已隐藏时直接复用实例。kind=window/fullscreen 为独立窗口形态。 */
   async function openWindow(
     pluginId: string,
     url: string,
     keepAlive = false,
     kind: PluginWindowKind = 'inline',
+    title = pluginId,
   ) {
-    if (activeId.value && activeId.value !== pluginId) {
-      const prev = windows.value[activeId.value]
-      if (prev?.keepAlive) {
-        await execHide(activeId.value)
-        prev.viewState = 'hidden'
+    for (const id of Object.keys(windows.value)) {
+      if (id === pluginId) continue
+      const win = windows.value[id]
+      if (win?.keepAlive) {
+        if (win.kind === 'inline') {
+          if (activeId.value === id) activeId.value = null
+          await execHide(id)
+        } else {
+          await execHideStandalone(id, win.kind === 'fullscreen')
+        }
+        win.viewState = 'hidden'
       } else {
-        await closeWindow(activeId.value)
+        await closeWindow(id)
       }
     }
-    await execOpen(pluginId, url)
+    if (kind === 'inline') {
+      await execOpen(pluginId, url)
+    } else {
+      await execOpenStandalone(pluginId, url, kind, title)
+    }
     windows.value[pluginId] = {
       pluginId,
-      label: `${LABEL_PREFIX}${pluginId}`,
+      label: kind === 'inline' ? `${LABEL_PREFIX}${pluginId}` : `${STANDALONE_PREFIX}${pluginId}`,
       url,
       kind,
       keepAlive,
       viewState: 'active',
     }
-    activeId.value = pluginId
+    if (kind === 'inline') activeId.value = pluginId
   }
 
   /** 模态打开：临时隐藏当前前台插件窗口（activeId 保留，模态关闭后恢复） */
@@ -243,9 +310,14 @@ export const useRuntimeStore = defineStore('runtime', () => {
     if (activeId.value === pluginId) activeId.value = null
   }
 
-  /** 退出关闭：销毁 webview + 移除登记 */
+  /** 退出关闭：销毁独立窗口（并恢复主窗口）或内嵌 webview，统一移除登记 */
   async function closeWindow(pluginId: string) {
-    await execClose(pluginId)
+    const kind = windows.value[pluginId]?.kind ?? 'inline'
+    if (kind !== 'inline') {
+      await execCloseStandalone(pluginId, kind === 'fullscreen')
+    } else {
+      await execClose(pluginId)
+    }
     delete windows.value[pluginId]
     if (activeId.value === pluginId) activeId.value = null
   }
@@ -261,6 +333,7 @@ export const useRuntimeStore = defineStore('runtime', () => {
   return {
     windows,
     activeId,
+    selectedPluginId,
     openWindow,
     closeWindow,
     leaveWindow,

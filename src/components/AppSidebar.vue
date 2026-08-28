@@ -21,7 +21,7 @@
           v-for="item in systemItems"
           :key="item.path"
           class="nav-btn"
-          :class="[`btn-${style}`, { active: currentRoute === item.path }]"
+          :class="[`btn-${style}`, { active: currentRoute === item.path && !runtime.selectedPluginId }]"
           :title="style === 'icon' ? $t(item.label) : undefined"
           @click="navigate(item.path)"
         >
@@ -43,9 +43,9 @@
             v-for="plugin in enabledPlugins"
             :key="plugin.id"
             class="nav-btn"
-            :class="[`btn-${style}`, { active: currentRoute === `/plugin/${plugin.id}` }]"
+            :class="[`btn-${style}`, { active: runtime.selectedPluginId === plugin.id }]"
             :title="style === 'icon' ? plugin.name : undefined"
-            @click="navigate(`/plugin/${plugin.id}`)"
+            @click="openPlugin(plugin)"
           >
             <span
               class="plugin-icon-wrap"
@@ -90,11 +90,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { usePluginStore } from '@/stores/plugins'
 import { useRuntimeStore } from '@/stores/runtime'
+import { usePluginOpen } from '@/composables/usePluginOpen'
 import SvgIcon from '@/components/SvgIcon.vue'
 import BrandLogo from '@/components/BrandLogo.vue'
 
@@ -105,6 +106,7 @@ const route = useRoute()
 const appStore = useAppStore()
 const pluginStore = usePluginStore()
 const runtime = useRuntimeStore()
+const { openPlugin } = usePluginOpen()
 
 const isRunning = (id: string) => !!runtime.windows[id]
 
@@ -125,6 +127,11 @@ const logoSize = computed(() => {
 const currentRoute = computed(() => route.path)
 const enabledPlugins = computed(() => pluginStore.enabledPlugins)
 
+// 离开插件区（路由不再是 /plugin/*）时清掉导航选中，让系统项按路由正常高亮
+watch(currentRoute, (p) => {
+  if (!p.startsWith('/plugin/')) runtime.selectedPluginId = null
+})
+
 // 区块标题（系统功能/我的插件）：比禁用色更深，皮肤上更易读
 const sectionTitleColor = computed(() =>
   appStore.isDark ? 'rgba(255,255,255,0.7)' : 'rgba(24,24,28,0.55)',
@@ -137,6 +144,7 @@ const systemItems = [
 ]
 
 function navigate(path: string) {
+  runtime.selectedPluginId = null
   router.push(path)
 }
 </script>

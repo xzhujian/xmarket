@@ -399,6 +399,12 @@
           "markdownDescription": "Enables the create_plugin_webview command without any pre-configured scope."
         },
         {
+          "description": "Enables the create_plugin_window command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-create-plugin-window",
+          "markdownDescription": "Enables the create_plugin_window command without any pre-configured scope."
+        },
+        {
           "description": "Enables the delete_icon command without any pre-configured scope.",
           "type": "string",
           "const": "allow-delete-icon",
@@ -507,6 +513,12 @@
           "markdownDescription": "Enables the read_window_state command without any pre-configured scope."
         },
         {
+          "description": "Enables the restore_main_window command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-restore-main-window",
+          "markdownDescription": "Enables the restore_main_window command without any pre-configured scope."
+        },
+        {
           "description": "Enables the save_icon command without any pre-configured scope.",
           "type": "string",
           "const": "allow-save-icon",
@@ -571,6 +583,12 @@
           "type": "string",
           "const": "deny-create-plugin-webview",
           "markdownDescription": "Denies the create_plugin_webview command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the create_plugin_window command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-create-plugin-window",
+          "markdownDescription": "Denies the create_plugin_window command without any pre-configured scope."
         },
         {
           "description": "Denies the delete_icon command without any pre-configured scope.",
@@ -679,6 +697,12 @@
           "type": "string",
           "const": "deny-read-window-state",
           "markdownDescription": "Denies the read_window_state command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the restore_main_window command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-restore-main-window",
+          "markdownDescription": "Denies the restore_main_window command without any pre-configured scope."
         },
         {
           "description": "Denies the save_icon command without any pre-configured scope.",

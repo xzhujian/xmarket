@@ -26,7 +26,7 @@
           v-for="(plugin, idx) in plugins"
           :key="plugin.id"
           class="plugin-card"
-          @click="open(plugin.id)"
+          @click="openPlugin(plugin)"
         >
           <div class="card-top">
             <IconBox size="md">
@@ -53,17 +53,17 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/stores/app'
 import { usePluginStore } from '@/stores/plugins'
+import { usePluginOpen } from '@/composables/usePluginOpen'
 import SvgIcon from '@/components/SvgIcon.vue'
 import IconBox from '@/components/IconBox.vue'
 
-const router = useRouter()
 const { t, locale } = useI18n()
 const appStore = useAppStore()
 const pluginStore = usePluginStore()
+const { openPlugin } = usePluginOpen()
 
 const plugins = computed(() => pluginStore.enabledPlugins)
 const hasPlugins = computed(() => plugins.value.length > 0)
@@ -90,10 +90,6 @@ const dateText = computed(() => {
 
 const palette = ['#13987f', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981']
 const iconColor = (idx: number) => palette[idx % palette.length]
-
-function open(id: string) {
-  router.push(`/plugin/${id}`)
-}
 </script>
 
 <style lang="scss" scoped>

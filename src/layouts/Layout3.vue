@@ -8,7 +8,7 @@
           v-for="item in systemItems"
           :key="item.path"
           class="nav-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer text-sm"
-          :class="{ active: currentRoute === item.path }"
+          :class="{ active: currentRoute === item.path && !runtime.selectedPluginId }"
           :title="$t(item.label)"
           @click="navigate(item.path)"
         >
@@ -25,8 +25,8 @@
           v-for="plugin in enabledPlugins"
           :key="plugin.id"
           class="plugin-tab flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer text-sm whitespace-nowrap"
-          :class="{ active: currentRoute === `/plugin/${plugin.id}` }"
-          @click="navigate(`/plugin/${plugin.id}`)"
+          :class="{ active: runtime.selectedPluginId === plugin.id }"
+          @click="openPlugin(plugin)"
         >
           <img
             v-if="plugin.iconUrl"
@@ -56,11 +56,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { usePluginStore } from '@/stores/plugins'
 import { useRuntimeStore } from '@/stores/runtime'
+import { usePluginOpen } from '@/composables/usePluginOpen'
 import SvgIcon from '@/components/SvgIcon.vue'
 
 const router = useRouter()
@@ -68,9 +69,15 @@ const route = useRoute()
 const appStore = useAppStore()
 const pluginStore = usePluginStore()
 const runtime = useRuntimeStore()
+const { openPlugin } = usePluginOpen()
 
 const currentRoute = computed(() => route.path)
 const enabledPlugins = computed(() => pluginStore.enabledPlugins)
+
+// 离开插件区（路由不再是 /plugin/*）时清掉导航选中，让系统项按路由正常高亮
+watch(currentRoute, (p) => {
+  if (!p.startsWith('/plugin/')) runtime.selectedPluginId = null
+})
 
 const isRunning = (id: string) => !!runtime.windows[id]
 
@@ -87,6 +94,7 @@ const systemItems = [
 ]
 
 function navigate(path: string) {
+  runtime.selectedPluginId = null
   router.push(path)
 }
 </script>

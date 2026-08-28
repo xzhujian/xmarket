@@ -1,6 +1,7 @@
 {
   "identifier": "plugins-capability",
   "description": "Permissions for plugin child webviews (remote origin)",
+  "windows": ["plugin-window-*"],
   "webviews": ["plugin-page-*"],
   "remote": { "urls": ["http://*.localhost:*", "http://*", "https://*"] },
   "permissions": [

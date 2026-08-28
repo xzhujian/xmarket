@@ -49,6 +49,8 @@ pub fn run() {
             plugin_server::get_plugin_server_port,
             plugin_server::get_plugin_server_url,
             plugin_server::create_plugin_webview,
+            plugin_server::create_plugin_window,
+            plugin_server::restore_main_window,
 
             // ── 设置部分 ──
             settings::read_config,
