@@ -279,7 +279,7 @@ async function doUninstall() {
 }
 .plugin-item {
   height: 72px;
-  // 拖拽中：fixed 脱离文档流跟手移动（top/left/width 由 JS 注入），兄弟项自动让位填充
+  /* 拖拽中：fixed 脱离文档流跟手移动（top/left/width 由 JS 注入），兄弟项自动让位填充 */
   &.dragging {
     position: fixed;
     cursor: grabbing;
