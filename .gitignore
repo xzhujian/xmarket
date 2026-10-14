@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 
+
 # 发版暂存目录:release/version.json 随主仓库进 git,exe 作为发行版附件不进 git
 release/*
 !release/version.json
@@ -19,6 +20,12 @@ updater/target/
 # OS files
 .DS_Store
 Thumbs.db
+
+# docs
+*.bat
+需求描述.md
+详细设计.md
+AGENTS.md
 
 # Logs
 *.log
